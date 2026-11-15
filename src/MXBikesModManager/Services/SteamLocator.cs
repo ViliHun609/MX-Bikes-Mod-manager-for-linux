@@ -11,31 +11,23 @@ public sealed record SteamDetectionResult(string? ModsRoot, IReadOnlyList<string
 public static partial class SteamLocator
 {
     public static SteamDetectionResult FindModsRoot(string appId)
+        => FindModsRoot(appId, EnumerateLibraries());
+
+    /// <summary>Testable core: searches the given steamapps folders for the app's Proton prefix.</summary>
+    public static SteamDetectionResult FindModsRoot(string appId, IEnumerable<string> steamAppsDirectories)
     {
         var searched = new List<string>();
         var problems = new List<string>();
 
-        foreach (var library in EnumerateLibraries())
+        foreach (var steamApps in steamAppsDirectories)
         {
-            var compatdata = Path.Combine(library, "steamapps", "compatdata", appId);
-            var pfx = Path.Combine(compatdata, "pfx", "drive_c", "users");
+            var pfx = Path.Combine(steamApps, "compatdata", appId, "pfx", "drive_c", "users");
             searched.Add(pfx);
 
-            if (!Directory.Exists(pfx))
+            var mods = FindModsFolderInPrefix(pfx);
+            if (mods is not null)
             {
-                continue;
-            }
-
-            foreach (var userDir in PathUtil.EnumerateDirectoriesSafe(pfx))
-            {
-                foreach (var documentsName in new[] { "My Documents", "Documents" })
-                {
-                    var mods = PathUtil.ResolveIgnoreCase(userDir, documentsName, "PiBoSo", "MX Bikes", "mods");
-                    if (mods is not null && Directory.Exists(mods))
-                    {
-                        return new SteamDetectionResult(mods, searched, problems);
-                    }
-                }
+                return new SteamDetectionResult(mods, searched, problems);
             }
         }
 
@@ -45,6 +37,33 @@ public static partial class SteamLocator
         }
 
         return new SteamDetectionResult(null, searched, problems);
+    }
+
+    /// <summary>Looks for the mods folder in one Steam library's Proton prefix for the given app id.</summary>
+    public static string? FindModsRootInLibrary(string steamAppsDirectory, string appId)
+    {
+        var pfx = Path.Combine(steamAppsDirectory, "compatdata", appId, "pfx", "drive_c", "users");
+        return FindModsFolderInPrefix(pfx);
+    }
+
+    /// <summary>Checks each Proton user folder for My Documents/PiBoSo/MX Bikes/mods.</summary>
+    public static string? FindModsFolderInPrefix(string pfxUsersDirectory)
+    {
+        if (!Directory.Exists(pfxUsersDirectory)) return null;
+
+        foreach (var userDir in PathUtil.EnumerateDirectoriesSafe(pfxUsersDirectory))
+        {
+            foreach (var documentsName in new[] { "My Documents", "Documents", "Documents and Settings" })
+            {
+                var mods = PathUtil.ResolveIgnoreCase(userDir, documentsName, "PiBoSo", "MX Bikes", "mods");
+                if (mods is not null && Directory.Exists(mods))
+                {
+                    return mods;
+                }
+            }
+        }
+
+        return null;
     }
 
     public static IEnumerable<string> EnumerateLibraries()

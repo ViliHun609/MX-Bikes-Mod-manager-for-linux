@@ -59,8 +59,9 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-25 tests cover scanning/pairing, toggling, installs (including zip-slip attempts and
-backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, and the metadata cache.
+32 tests cover scanning/pairing, toggling, installs (including zip-slip attempts and
+backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, the metadata cache,
+and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 

@@ -51,10 +51,15 @@ public sealed class ConfigService
     private void Initialize(string? explicitConfigPath)
     {
         var path = AppPaths.FindConfigPath(explicitConfigPath);
-        if (path is null || !File.Exists(path))
+        if (path is null)
         {
             var fallbackDir = Directory.Exists(AppPaths.LaunchDir) ? AppPaths.LaunchDir : Directory.GetCurrentDirectory();
             path = Path.Combine(fallbackDir, "appsettings.json");
+        }
+
+        // An explicit --config path is honored even when the file does not exist yet.
+        if (!File.Exists(path))
+        {
             Config = CreateDefault();
             ConfigPath = path;
             TryWrite(path);

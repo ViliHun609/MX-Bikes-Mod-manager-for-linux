@@ -69,3 +69,31 @@ public sealed class TestEnvironment : IDisposable
         }
     }
 }
+
+/// <summary>A clean temporary directory that deletes itself on Dispose.</summary>
+public sealed class TestDir : IDisposable
+{
+    public string Path { get; } =
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mxbikes-tests", Guid.NewGuid().ToString("N"));
+
+    public TestDir() => Directory.CreateDirectory(Path);
+
+    public string Dir(params string[] segments)
+    {
+        var path = segments.Aggregate(Path, System.IO.Path.Combine);
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            if (Directory.Exists(Path)) Directory.Delete(Path, recursive: true);
+        }
+        catch (IOException)
+        {
+            // Best effort cleanup.
+        }
+    }
+}

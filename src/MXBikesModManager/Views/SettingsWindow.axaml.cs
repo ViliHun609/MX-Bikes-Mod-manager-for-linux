@@ -9,10 +9,11 @@ public partial class SettingsWindow : Window
 {
     private readonly ConfigService _config;
 
+    /// <summary>Designer-only constructor; the app always passes the already-loaded config.</summary>
     public SettingsWindow()
     {
         InitializeComponent();
-        _config = ConfigService.Load(null);
+        _config = null!;
     }
 
     public SettingsWindow(ConfigService config, Window owner) : this(config)
@@ -59,13 +60,17 @@ public partial class SettingsWindow : Window
         {
             ModsRootBox.Text = result.ModsRoot;
             HideWarning();
+            _config.Log.Info($"Auto-detect found mods folder: {result.ModsRoot}");
             return;
         }
 
         var searched = result.Searched.Count > 0
-            ? $"Searched {result.Searched.Count} prefix locations."
-            : "No Steam library found.";
-        ShowWarning($"Could not detect the folder automatically. {searched} Pick it with Browse… instead.");
+            ? $"Searched {result.Searched.Count} Proton prefix location(s)."
+            : "No Steam library was found.";
+        _config.Log.Warn($"Auto-detect failed. {searched} Searched: {string.Join(", ", result.Searched)}");
+        ShowWarning(
+            $"Could not detect the folder automatically. {searched} " +
+            "Start MX Bikes once through Steam/Proton, then try again — or pick the folder with Browse…");
     }
 
     private void OnSave(object? sender, RoutedEventArgs e)
