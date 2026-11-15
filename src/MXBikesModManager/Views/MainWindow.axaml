@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MXBikesModManager.ViewModels"
+        xmlns:views="using:MXBikesModManager.Views"
+        x:Class="MXBikesModManager.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="MX Bikes Mod Manager"
+        Width="1420"
+        Height="880"
+        MinWidth="900"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        DragDrop.AllowDrop="True">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="{DynamicResource PanelBg}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Border Width="38" Height="38" CornerRadius="10" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
+            <TextBlock Text="MX" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <StackPanel VerticalAlignment="Center" Spacing="1">
+            <TextBlock Text="MX Bikes Mod Manager" FontSize="17" FontWeight="Bold" />
+            <TextBlock Text="{Binding ModsRoot}" Classes="muted" FontSize="11" MaxWidth="640"
+                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ModsRoot}" />
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Classes="ghost" Content="Mods folder" Command="{Binding OpenModsFolderCommand}"
+                  IsEnabled="{Binding HasModsFolder}" />
+          <Button Classes="ghost" Content="Install mod…" Command="{Binding InstallCommand}" />
+          <Button Classes="ghost" Content="Refresh" Command="{Binding RefreshCommand}" IsEnabled="{Binding !IsBusy}" />
+          <Button Classes="primary" Content="▶ Launch MX Bikes" Command="{Binding LaunchGameCommand}" />
+        </StackPanel>
+
+      </Grid>
+    </Border>
+
+    <!-- Missing folder banner -->
+    <Border Grid.Row="1" Background="#2a1c0e" BorderBrush="#6b3f10" BorderThickness="0,0,0,1"
+            Padding="16,10" IsVisible="{Binding !HasModsFolder}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="The MX Bikes mods folder could not be found. Point the manager at your Proton prefix's My Documents/PiBoSo/MX Bikes/mods folder."
+                   Foreground="#ffcf9a" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="primary" Content="Choose folder" Command="{Binding OpenSettingsCommand}" Margin="12,0,0,0" />
+      </Grid>
+    </Border>
+
+    <!-- Mod type tabs -->
+    <TabControl Grid.Row="2" Margin="10,10,10,0"
+                ItemsSource="{Binding Types}"
+                SelectedItem="{Binding SelectedType}"
+                Padding="0">
+      <TabControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:ModTypeViewModel">
+          <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,2">
+            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Border Background="#1c242e" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding TotalCount}" FontSize="10" Classes="muted" />
+            </Border>
+          </StackPanel>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+      <TabControl.ContentTemplate>
+        <DataTemplate x:DataType="vm:ModTypeViewModel">
+          <views:ModTypeView />
+        </DataTemplate>
+      </TabControl.ContentTemplate>
+    </TabControl>
+
+    <!-- Status bar -->
+    <Grid Grid.Row="3" RowDefinitions="Auto,Auto" Background="{DynamicResource PanelBg}" Margin="0,8,0,0">
+      <ProgressBar Grid.Row="0" IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="3" />
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" Margin="16,8" VerticalAlignment="Center">
+        <TextBlock Text="{Binding Summary}" Classes="muted" FontSize="12" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" Margin="18,0" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+          <Button Classes="ghost" Content="Data folder" Command="{Binding OpenDataFolderCommand}" />
+          <Button Classes="ghost" Content="Logs" Command="{Binding OpenLogsCommand}" />
+          <Button Classes="ghost" Content="Settings" Command="{Binding OpenSettingsCommand}" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+  </Grid>
+</Window>

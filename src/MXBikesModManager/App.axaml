@@ -1,0 +1,147 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MXBikesModManager.App"
+             RequestedThemeVariant="Dark">
+
+  <Application.Resources>
+    <Color x:Key="SystemAccentColor">#ff8a1e</Color>
+    <Color x:Key="SystemAccentColorDark1">#e0781a</Color>
+    <Color x:Key="SystemAccentColorDark2">#c26815</Color>
+    <Color x:Key="SystemAccentColorDark3">#a35610</Color>
+    <Color x:Key="SystemAccentColorLight1">#ffa347</Color>
+    <Color x:Key="SystemAccentColorLight2">#ffb76b</Color>
+    <Color x:Key="SystemAccentColorLight3">#ffcb8f</Color>
+    <SolidColorBrush x:Key="AppBg" Color="#0d1014" />
+    <SolidColorBrush x:Key="PanelBg" Color="#151a20" />
+    <SolidColorBrush x:Key="PanelBgAlt" Color="#11161b" />
+    <SolidColorBrush x:Key="CardBg" Color="#1b222a" />
+    <SolidColorBrush x:Key="CardHover" Color="#222b35" />
+    <SolidColorBrush x:Key="LineBrush" Color="#28323d" />
+    <SolidColorBrush x:Key="TextBrush" Color="#e9eff5" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#8d9bab" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#ff8a1e" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#ffa347" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#1a1206" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#e0452f" />
+    <SolidColorBrush x:Key="PreviewBg" Color="#0b0e12" />
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource AppBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <Style Selector="Button:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource CardHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.ghost">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+    </Style>
+
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    </Style>
+
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
+    <Style Selector="Border.tile:pointerover">
+      <Setter Property="Background" Value="{DynamicResource CardHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <Style Selector="Border.badge">
+      <Setter Property="Background" Value="#b30b0e12" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="6,2" />
+    </Style>
+
+    <Style Selector="ListBox.chips">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.chips ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="ListBox.chips ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <Style Selector="ListBox.chips ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="ProgressBar">
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Background" Value="{DynamicResource CardBg}" />
+      <Setter Property="MinHeight" Value="3" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{DynamicResource PanelBg}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+
+    <Style Selector="ScrollBar">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+  </Application.Styles>
+</Application>

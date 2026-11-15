@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="MXBikesModManager.Views.SettingsWindow"
+        Title="Settings"
+        Width="680"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+  <StackPanel Margin="22" Spacing="14">
+
+    <TextBlock Text="MX Bikes mods folder" FontWeight="SemiBold" />
+    <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+               Text="Usually inside the Proton prefix: compatdata/655500/pfx/drive_c/users/steamuser/My Documents/PiBoSo/MX Bikes/mods" />
+
+    <Grid ColumnDefinitions="*,Auto,Auto">
+      <TextBox x:Name="ModsRootBox" Watermark="/path/to/…/My Documents/PiBoSo/MX Bikes/mods" />
+      <Button Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Click="OnBrowse" />
+      <Button Grid.Column="2" Content="Auto-detect" Margin="8,0,0,0" Click="OnDetect" />
+    </Grid>
+
+    <CheckBox x:Name="AutoDetectCheck" Content="Auto-detect the folder on startup" />
+    <CheckBox x:Name="ShowPreviewsCheck" Content="Show preview images (track cover art inside .pkz files)" />
+    <CheckBox x:Name="HideDisabledCheck" Content="Hide disabled mods by default" />
+
+    <Border Background="{DynamicResource PanelBgAlt}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+            CornerRadius="8" Padding="12">
+      <StackPanel Spacing="4">
+        <TextBlock Text="Repository data folder" FontSize="12" FontWeight="SemiBold" />
+        <TextBlock x:Name="DataPathText" Classes="muted" FontSize="11" TextWrapping="Wrap" />
+        <TextBlock Text="Cache, thumbnails, logs, backups and trash live here — inside the repo so nothing lands in your home folder."
+                   Classes="muted" FontSize="11" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <TextBlock x:Name="WarningText" Foreground="#ffcf9a" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancel" />
+      <Button Classes="primary" Content="Save" Click="OnSave" />
+    </StackPanel>
+
+  </StackPanel>
+</Window>

@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MXBikesModManager.ViewModels"
+             x:Class="MXBikesModManager.Views.ModTypeView"
+             x:DataType="vm:ModTypeViewModel">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <Border Grid.Row="0" Background="{DynamicResource PanelBgAlt}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="14,10">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox Width="280" Watermark="Search mods…" Text="{Binding SearchText}" />
+          <ComboBox Width="150" ItemsSource="{Binding SortModes}" SelectedItem="{Binding SortMode}" />
+          <CheckBox Content="Hide disabled" IsChecked="{Binding HideDisabled}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <Button Content="Select all" Command="{Binding SelectAllCommand}" />
+          <Button Content="Clear" Command="{Binding ClearSelectionCommand}" />
+          <Button Classes="primary" Content="Enable" Command="{Binding Owner.EnableSelectedCommand}" />
+          <Button Content="Disable" Command="{Binding Owner.DisableSelectedCommand}" />
+          <Button Classes="danger" Content="Remove" Command="{Binding Owner.RemoveSelectedCommand}" />
+        </StackPanel>
+
+        <ListBox Grid.Row="1" Grid.ColumnSpan="2"
+                 Classes="chips"
+                 ItemsSource="{Binding Categories}"
+                 SelectedItem="{Binding SelectedCategory}"
+                 IsVisible="{Binding HasCategories}"
+                 Margin="0,10,0,0">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:CategoryFilterViewModel">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding DisplayName}" FontSize="12" />
+                <TextBlock Text="{Binding CountText}" FontSize="11" Opacity="0.6" VerticalAlignment="Center" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <Panel>
+        <ItemsControl ItemsSource="{Binding FilteredItems}" Margin="6">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ModItemViewModel">
+              <Border Classes="tile" Width="220" Height="190" Margin="8" Opacity="{Binding TileOpacity}">
+                <Border.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Open containing folder" Command="{Binding OpenFolderCommand}" />
+                    <MenuItem Header="Copy path" Command="{Binding CopyPathCommand}" />
+                  </ContextMenu>
+                </Border.ContextMenu>
+                <Grid RowDefinitions="112,Auto,Auto,*">
+
+                  <Border Grid.Row="0" Background="{DynamicResource PreviewBg}" ClipToBounds="True" CornerRadius="11,11,0,0">
+                    <Panel>
+                      <Image Source="{Binding PreviewImage}"
+                             Stretch="UniformToFill"
+                             IsVisible="{Binding HasPreview}" />
+                      <StackPanel IsVisible="{Binding !HasPreview}"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Monogram}"
+                                   FontSize="38"
+                                   FontWeight="Bold"
+                                   Foreground="#3b4a5a"
+                                   HorizontalAlignment="Center" />
+                      </StackPanel>
+                      <Border Classes="badge" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
+                        <TextBlock Text="{Binding KindLabel}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" />
+                      </Border>
+                      <Border Classes="badge" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6">
+                        <CheckBox IsChecked="{Binding IsSelected}"
+                                  ToolTip.Tip="Select for bulk actions"
+                                  MinWidth="0"
+                                  MinHeight="0"
+                                  Padding="0" />
+                      </Border>
+                    </Panel>
+                  </Border>
+
+                  <TextBlock Grid.Row="1" Text="{Binding Name}" Margin="10,8,10,0"
+                             FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+
+                  <TextBlock Grid.Row="2" Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}"
+                             Classes="muted" Margin="10,2,10,0" FontSize="11" TextTrimming="CharacterEllipsis" />
+
+                  <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="10,4,10,8" VerticalAlignment="Bottom">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding SizeText}" Classes="muted" FontSize="11" VerticalAlignment="Center" />
+                      <Border Background="#141a21" CornerRadius="4" Padding="5,1" IsVisible="{Binding HasCategory}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Category}" FontSize="10" Classes="muted" />
+                      </Border>
+                    </StackPanel>
+                    <CheckBox Grid.Column="1" IsChecked="{Binding IsEnabled}" Content="Enabled" FontSize="11" MinWidth="0" Padding="4,0" />
+                  </Grid>
+
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <StackPanel IsVisible="{Binding IsEmpty}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="6"
+                    Margin="0,80,0,0">
+          <TextBlock Text="{Binding EmptyMessage}" Classes="muted" FontSize="14" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Panel>
+    </ScrollViewer>
+
+  </Grid>
+</UserControl>

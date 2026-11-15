@@ -1,0 +1,169 @@
+# MX Bikes Mod Manager (Linux)
+
+A native Linux mod manager for [MX Bikes](https://store.steampowered.com/app/655500/) —
+built with **Avalonia UI** and **.NET 10**. It reads the game's mods folder directly out of
+the Proton prefix, shows every mod as a card grid per type, and enables/disables mods
+instantly by renaming them in place.
+
+![Screenshot](docs/screenshot.png)
+
+## Features
+
+- **Tabs per mod type** — Bikes, Tracks, Tyres, Rider, Misc, each shown as a card grid
+  (all types and their folders are configurable in `appsettings.json`).
+- **Instant enable/disable** — renames `mod.pkz` → `mod.pkz.disabled` (and the paired
+  `mod/` asset folder), so nothing is copied and 12+ GB load instantly. State is derived
+  from the filename, so manual changes made outside the app stay in sync.
+- **Preview images** — cover art inside `.pkz` files is extracted and rendered
+  (`capa.tga` for tracks, plus whatever preview image a mod ships). Bike `.pkz` files are
+  usually PiBoSo-obfuscated, so those tiles fall back to a clean monogram.
+- **Rider/Misc categories** — filter chips for Helmets, Boots, Protections, Riders,
+  Animations, Helmet Cams, Fonts…
+- **Install mods** — drag & drop or pick `.zip`, `.7z`, `.rar`, `.tar.gz`, a bare `.pkz`
+  or a folder. Archives are routed automatically (game folder layout, `.map`/`.tyre`/
+  `.pnt` detection) and you're asked to pick a type only when it's genuinely ambiguous.
+- **Non-destructive** — replaced files are backed up to `data/backups/…`, removed mods go
+  to `data/trash/…`, and every operation is logged to `data/logs/app.log`.
+- **Search, sort (name/size/newest), hide disabled, bulk enable/disable/remove**, launch
+  the game, open the mods folder, copy paths.
+- **Auto-detection** — finds the prefix via `libraryfolders.vdf` across native Steam
+  libraries and Flatpak Steam; manual folder picker if that fails.
+- **Portable** — config, cache, thumbnails, backups and logs all live inside this repo
+  (or next to the AppImage), never in `~/.config`.
+- **AppImage build** with `scripts/build-appimage.sh`.
+
+## Requirements
+
+- To build: .NET 10 SDK.
+- To run the AppImage: nothing else (self-contained).
+- MX Bikes installed through Steam/Proton and started at least once (so the prefix exists).
+
+## Run from source
+
+```bash
+dotnet run --project src/MXBikesModManager
+```
+
+Headless diagnostics (no window, prints a scan summary):
+
+```bash
+dotnet run --project src/MXBikesModManager -- --scan
+dotnet run --project src/MXBikesModManager -- --scan --mods "/path/to/…/MX Bikes/mods"
+dotnet run --project src/MXBikesModManager -- --help
+```
+
+## Tests
+
+```bash
+dotnet test
+```
+
+25 tests cover scanning/pairing, toggling, installs (including zip-slip attempts and
+backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, and the metadata cache.
+
+## Configuration (`appsettings.json`)
+
+Lookup order: `--config <path>` → next to the AppImage/executable → current directory →
+repo root. The file is created automatically if it is missing.
+
+```json
+{
+  "game": {
+    "appId": "655500",
+    "name": "MX Bikes",
+    "modsRoot": "/home/you/.local/share/Steam/steamapps/compatdata/655500/pfx/drive_c/users/steamuser/My Documents/PiBoSo/MX Bikes/mods",
+    "launchUri": "steam://rungameid/655500",
+    "autoDetect": true
+  },
+  "data": { "root": "data" },
+  "mods": {
+    "disabledSuffix": ".disabled",
+    "scanDepth": 2,
+    "computeSizes": true
+  },
+  "modTypes": [
+    {
+      "key": "tracks",
+      "folder": "tracks",
+      "title": "Tracks",
+      "pairedFolder": true,
+      "installSubfolder": "Mods",
+      "scanSubfolders": [ "Mods", "motocross", "supercross", "supermoto", "enduro" ],
+      "categorizeBySubfolder": false
+    }
+  ],
+  "ui": {
+    "layout": "grid",
+    "tileWidth": 220,
+    "tileHeight": 190,
+    "showPreviews": true,
+    "hideDisabledByDefault": false
+  }
+}
+```
+
+- `modsRoot` — the game's mods folder inside the Proton prefix. Auto-detected when empty.
+- `data.root` — relative paths resolve against the config file's folder, keeping
+  everything in the repo (or next to the AppImage).
+- `modTypes[].scanSubfolders` — subfolders to scan; `categorizeBySubfolder` turns them
+  into filter chips (used for Rider/Misc).
+- `installSubfolder` — where installs go (tracks → `tracks/Mods`).
+- `ui.tileWidth/tileHeight` — card size for the grid.
+
+Everything can also be changed in the in-app **Settings** dialog.
+
+## How enabling/disabling works
+
+```
+bikes/KTM_450SX.pkz        → bikes/KTM_450SX.pkz.disabled
+bikes/KTM_450SX/paints/…   → bikes/KTM_450SX.disabled/paints/…
+```
+
+This is a rename on the same filesystem — instant, reversible, and safe for multi-GB
+packs. If the game ever turns out to still scan disabled folders, set
+`"disableStrategy": "moveToDisabledDir"` (reserved for a future mode) or simply keep the
+suffix and remove that folder from `scanSubfolders`.
+
+> Close MX Bikes before toggling many mods; renaming files under a running game can
+> confuse its mod cache.
+
+## AppImage
+
+```bash
+scripts/build-appimage.sh
+# → dist/MXBikesModManager-x86_64.AppImage
+```
+
+The script publishes a self-contained `linux-x64` build, assembles an `AppDir` with a
+desktop entry and icon, and packages it with `appimagetool` (uses one from `PATH` or
+downloads it into `data/tools/`). AppRun forwards arguments, so `--scan` works too.
+
+When running the AppImage, put `appsettings.json` next to the `.AppImage` file (or pass
+`--config`) and the app writes its `data/` folder next to it as well.
+
+## Project layout
+
+```
+appsettings.json                  portable configuration
+src/MXBikesModManager/
+  Models/       config + mod entry models
+  Services/     SteamLocator, ModScanner, PkzInspector, TgaDecoder,
+                ThumbnailService, InstallService, ToggleService,
+                MetadataCache, ConfigService, LogService
+  ViewModels/   MainWindowViewModel, ModTypeViewModel, ModItemViewModel
+  Views/        MainWindow, ModTypeView, Settings/InstallTarget/Message dialogs
+  Assets/       icon (svg/png/ico)
+tests/MXBikesModManager.Tests/    xUnit test suite
+scripts/build-appimage.sh         AppImage packaging
+data/                             runtime data (gitignored)
+```
+
+## Notes
+
+- `.pkz` files are containers: tracks (and some tyres) are normal ZIPs, so their metadata
+  and cover art can be read without extracting anything. Bike packs are obfuscated
+  PiBoSo containers — metadata/preview is skipped for those.
+- Previews are decoded in-process: TGA (uncompressed + RLE) is handled by a small custom
+  decoder, PNG/JPEG/BMP/WebP by Avalonia/Skia.
+- Scans only read ZIP central directories and file metadata, so ~200 mods / 13 GB scan in
+  well under a second after the metadata cache is warm.

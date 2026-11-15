@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+
+# Runtime data (kept inside the repo but never committed)
+data/
+MXBikesModManager-data/
+*.AppImage
+AppDir/
+squashfs-root/
+
+# Publishing output
+publish/
+build/
+dist/
+
+# OS noise
+.DS_Store
+Thumbs.db

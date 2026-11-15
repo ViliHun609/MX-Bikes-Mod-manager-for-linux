@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MXBikesModManager/MXBikesModManager.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MXBikesModManager.Tests/MXBikesModManager.Tests.csproj" />
+  </Folder>
+</Solution>

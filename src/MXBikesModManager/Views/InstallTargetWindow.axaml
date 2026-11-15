@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="using:MXBikesModManager.Models"
+        x:Class="MXBikesModManager.Views.InstallTargetWindow"
+        Title="Choose mod type"
+        Width="580"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+  <StackPanel Margin="22" Spacing="14">
+
+    <TextBlock x:Name="FileText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+    <TextBlock x:Name="KindText" Classes="muted" FontSize="12" TextWrapping="Wrap" />
+
+    <TextBlock Text="Where should this mod be installed?" FontWeight="SemiBold" Margin="0,4,0,0" />
+
+    <ListBox x:Name="TypeList" Height="188" SelectionChanged="OnTypeChanged">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="models:ModTypeConfig">
+          <StackPanel Spacing="1" Margin="4,3">
+            <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Folder}" Classes="muted" FontSize="11" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <StackPanel Spacing="6">
+      <TextBlock Text="Subfolder (optional)" Classes="muted" FontSize="12" />
+      <TextBox x:Name="SubfolderBox" Watermark="e.g. Mods for tracks, leave empty for the type folder" />
+    </StackPanel>
+
+    <TextBlock x:Name="WarningText" Foreground="#ffcf9a" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancel" />
+      <Button Classes="primary" Content="Install" Click="OnInstall" />
+    </StackPanel>
+
+  </StackPanel>
+</Window>
