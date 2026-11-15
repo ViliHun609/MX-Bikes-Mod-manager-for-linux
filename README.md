@@ -15,8 +15,9 @@ instantly by renaming them in place.
   `mod/` asset folder), so nothing is copied and 12+ GB load instantly. State is derived
   from the filename, so manual changes made outside the app stay in sync.
 - **Preview images** — cover art inside `.pkz` files is extracted and rendered
-  (`capa.tga` for tracks, plus whatever preview image a mod ships). Bike `.pkz` files are
-  usually PiBoSo-obfuscated, so those tiles fall back to a clean monogram.
+  (`capa.tga` for tracks, plus whatever preview image a mod ships), and images found in
+  a mod's asset folder are used too. Bike `.pkz` files are usually PiBoSo-obfuscated,
+  so tiles without any image fall back to a clean monogram.
 - **Rider/Misc categories** — filter chips for Helmets, Boots, Protections, Riders,
   Animations, Helmet Cams, Fonts…
 - **Install mods** — drag & drop or pick `.zip`, `.7z`, `.rar`, `.tar.gz`, a bare `.pkz`
