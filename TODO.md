@@ -13,8 +13,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Log drag formats, item counts and resolved paths to `data/logs/app.log`
 - [x] Report non-local drops and catch install errors in the status bar
 - [ ] User performs one real drag (then we read the log)
-- [ ] Commit this batch
-- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Commit this batch (`7ff4ba2`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `f829b51eb142562077d4e1753a1eb2da1fa17404ca0c6ce337e894fc8d193797`
 
 ## Themes (done)
 
@@ -55,4 +56,5 @@ Status of the current batch of work. Update the checkboxes as things change.
 - Drag & drop still needs one real file-manager test; the log now records enough to
   diagnose a failure.
 - The final look of all five themes should be eyeballed once by the user.
+- `docs/screenshot.png` still shows the old icons; refresh it after the visual check.
 - `dist/` is git-ignored; the AppImage is produced by `./scripts/build-appimage.sh`.
