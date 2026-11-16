@@ -35,6 +35,11 @@ public sealed class InstallPlan
     /// <summary>Type guessed from the archive content, used to preselect the dialog.</summary>
     public string? DetectedTypeKey { get; set; }
 
+    /// <summary>True when the archive already uses the game's mods/&lt;type&gt;/... layout.</summary>
+    public bool HasGameLayout { get; set; }
+    public string? LayoutTypeKey { get; set; }
+    public string? LayoutFolder { get; set; }
+
     public string DetectedKind { get; set; } = string.Empty;
     public List<ArchiveEntry> Entries { get; } = new();
     public List<PlannedFile> Files { get; } = new();
@@ -96,9 +101,8 @@ public sealed class InstallService
             plan.IsFolderCopy = true;
             plan.IsDirectCopy = true;
             plan.DetectedKind = "folder";
-            var folderType = ResolveType(preferredTypeKey);
-            if (folderType is null) plan.NeedsTypeChoice = true;
-            else Finalize(plan, folderType, preferredSubfolder);
+            plan.DetectedTypeKey = SuggestTypeKey(sourcePath, preferredTypeKey);
+            plan.NeedsTypeChoice = true;
             return plan;
         }
 
@@ -122,10 +126,9 @@ public sealed class InstallService
         if (extension == ".pkz")
         {
             plan.IsDirectCopy = true;
-            plan.DetectedKind = "pkz archive";
-            var pkzType = ResolveType(preferredTypeKey);
-            if (pkzType is null) plan.NeedsTypeChoice = true;
-            else Finalize(plan, pkzType, preferredSubfolder);
+            plan.DetectedKind = "PiBoSo .pkz archive (type cannot be read)";
+            plan.DetectedTypeKey = SuggestTypeKey(sourcePath, preferredTypeKey);
+            plan.NeedsTypeChoice = true;
             return plan;
         }
 
@@ -183,6 +186,9 @@ public sealed class InstallService
         {
             plan.Type = layoutType;
             plan.DetectedTypeKey = layoutType.Key;
+            plan.HasGameLayout = true;
+            plan.LayoutTypeKey = layoutType.Key;
+            plan.LayoutFolder = layoutType.Folder;
             plan.NeedsTypeChoice = false;
             foreach (var entry in plan.Entries)
             {
@@ -204,8 +210,9 @@ public sealed class InstallService
         }
 
         var detected = DetectTypeKey(relativeKeys);
-        plan.DetectedTypeKey = detected;
-        var type = ResolveType(preferredTypeKey) ?? ResolveType(detected);
+        var hint = SuggestTypeKey(sourcePath, preferredTypeKey);
+        plan.DetectedTypeKey = detected ?? hint;
+        var type = ResolveType(detected) ?? ResolveType(hint);
         if (type is null)
         {
             plan.NeedsTypeChoice = true;
@@ -224,8 +231,39 @@ public sealed class InstallService
         plan.Type = type;
         plan.NeedsTypeChoice = false;
         plan.Files.Clear();
+        plan.Warnings.Clear();
 
         var typeRoot = GetTypeRoot(type, preferredSubfolder);
+
+        if (plan.HasGameLayout && plan.LayoutFolder is not null)
+        {
+            // The archive already contains <type>/...; strip that prefix and re-target it.
+            foreach (var entry in plan.Entries)
+            {
+                if (HasTraversal(entry.RelativeKey))
+                {
+                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
+                    continue;
+                }
+
+                var relative = entry.RelativeKey;
+                if (relative.StartsWith(plan.LayoutFolder + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    relative = relative[(plan.LayoutFolder.Length + 1)..];
+                }
+
+                var destination = Path.Combine(typeRoot, relative.Replace('/', Path.DirectorySeparatorChar));
+                if (!IsInsideModsRoot(destination))
+                {
+                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
+                    continue;
+                }
+                plan.Files.Add(new PlannedFile { EntryKey = entry.RawKey, DestinationPath = destination });
+            }
+
+            CountOverwrites(plan);
+            return;
+        }
 
         if (plan.IsFolderCopy)
         {
@@ -319,6 +357,90 @@ public sealed class InstallService
             .FirstOrDefault();
     }
 
+    private static readonly (string Folder, string[] Hints)[] SubfolderHints =
+    {
+        ("boots", new[] { "boot", "instinct", "crossfire", "tech10", "tech 10", "gaerne", "sg12", "sg-12" }),
+        ("helmetcams", new[] { "helmetcam", "helmet cam", "camera", "gopro" }),
+        ("helmets", new[] { "helmet", "goggle", "mx9", "v3 helmet" }),
+        ("protections", new[] { "protection", "protector", "brace", "chest", "knee", "elbow", "roost" }),
+        ("riders", new[] { "rider", "jersey", "pants", "gear", "body", "skin", "model" }),
+        ("animations", new[] { "animation", "anim" }),
+        ("fonts", new[] { "font" }),
+        ("pitboard", new[] { "pitboard", "pit board" }),
+        ("motocross", new[] { "motocross", "mx track" }),
+        ("supercross", new[] { "supercross", "sx track" }),
+        ("supermoto", new[] { "supermoto", "sm track" }),
+        ("enduro", new[] { "enduro" })
+    };
+
+    /// <summary>Guesses a subfolder (e.g. boots/helmets) from the dropped file name.</summary>
+    public static string? SuggestSubfolder(string sourcePath, ModTypeConfig type)
+    {
+        var name = Path.GetFileNameWithoutExtension(sourcePath).ToLowerInvariant();
+        var available = type.ScanSubfolders
+            .Where(subfolder => !string.IsNullOrWhiteSpace(subfolder))
+            .ToList();
+
+        foreach (var (folder, hints) in SubfolderHints)
+        {
+            var match = available.FirstOrDefault(candidate =>
+                string.Equals(candidate, folder, StringComparison.OrdinalIgnoreCase));
+            if (match is null) continue;
+            if (hints.Any(hint => name.Contains(hint, StringComparison.Ordinal))) return match;
+        }
+
+        return null;
+    }
+
+    private static readonly (string TypeKey, string[] Hints)[] TypeHints =
+    {
+        ("rider", new[]
+        {
+            "boot", "instinct", "crossfire", "gaerne", "tech10", "tech 10",
+            "helmet", "goggle", "mx9", "protection", "protector", "brace", "chest",
+            "knee", "elbow", "roost", "rider", "jersey", "pants", "gear", "helmetcam",
+            "helmet cam", "gopro", "animation", "pitboard", "pit board"
+        }),
+        ("tyres", new[] { "tyre", "tire", "mousse" }),
+        ("tracks", new[]
+        {
+            "track", "motocross", "supercross", "enduro", "supermoto", "circuit", "mxgp"
+        }),
+        ("bike-paint", new[] { "paint", "graphic", "decal", "livery" }),
+        ("bikes", new[]
+        {
+            "ktm", "honda", "yamaha", "suzuki", "kawasaki", "husqvarna", "husky",
+            "gasgas", "gas gas", "fantic", "sxf", "sx-f", "sx f", "crf", "yzf",
+            "rmz", "kxf", "exc", "bike", " 250", " 450", " 125", " 300"
+        }),
+        ("misc", new[] { "misc" })
+    };
+
+    /// <summary>
+    /// Guesses the mod type from the dropped file/folder name. Detection from archive contents
+    /// is stronger, so this is only used when there is nothing better and never auto-installs.
+    /// </summary>
+    public string? SuggestTypeKey(string sourcePath, string? fallback = null)
+    {
+        var name = Path.GetFileNameWithoutExtension(sourcePath.TrimEnd(Path.DirectorySeparatorChar))
+            .ToLowerInvariant();
+
+        if (name.Length > 0)
+        {
+            var keys = _config.Config.ModTypes
+                .Select(t => t.Key)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (typeKey, hints) in TypeHints)
+            {
+                if (!keys.Contains(typeKey) && typeKey != "bike-paint") continue;
+                if (hints.Any(hint => name.Contains(hint, StringComparison.Ordinal))) return typeKey;
+            }
+        }
+
+        return fallback;
+    }
+
     /// <summary>Targets a paint archive/file at bikes/&lt;bike&gt;/paints/.</summary>
     public bool FinalizePaint(InstallPlan plan, string bikeFolder)
     {
@@ -327,6 +449,7 @@ public sealed class InstallService
         plan.IsBikePaint = true;
         plan.PaintBikeFolder = bikeFolder;
         plan.Files.Clear();
+        plan.Warnings.Clear();
 
         if (string.IsNullOrWhiteSpace(bikeFolder) ||
             bikeFolder.IndexOfAny(new[] { '/', '\\' }) >= 0 ||

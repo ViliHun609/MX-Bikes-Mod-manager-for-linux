@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using MXBikesModManager.Models;
@@ -23,8 +24,10 @@ public partial class MainWindow : Window, IUiInteraction
         _viewModel = new MainWindowViewModel(config, this, initialTab);
         DataContext = _viewModel;
 
-        AddHandler(DragDrop.DragOverEvent, OnDragOver);
-        AddHandler(DragDrop.DropEvent, OnDrop);
+        const RoutingStrategies routes = RoutingStrategies.Tunnel | RoutingStrategies.Bubble;
+        AddHandler(DragDrop.DragOverEvent, OnDragOver, routes, handledEventsToo: true);
+        AddHandler(DragDrop.DragLeaveEvent, OnDragLeave, routes, handledEventsToo: true);
+        AddHandler(DragDrop.DropEvent, OnDrop, routes, handledEventsToo: true);
 
         Opened += async (_, _) =>
         {
@@ -44,12 +47,22 @@ public partial class MainWindow : Window, IUiInteraction
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy : DragDropEffects.None;
+        var hasFiles = e.DataTransfer.Contains(DataFormat.File);
+        e.DragEffects = hasFiles ? DragDropEffects.Copy : DragDropEffects.None;
+        DropOverlay.IsVisible = hasFiles;
+        e.Handled = true;
+    }
+
+    private void OnDragLeave(object? sender, DragEventArgs e)
+    {
+        DropOverlay.IsVisible = false;
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        var files = e.Data.GetFiles();
+        DropOverlay.IsVisible = false;
+
+        var files = e.DataTransfer.TryGetFiles();
         if (files is null) return;
 
         var paths = files
@@ -57,6 +70,8 @@ public partial class MainWindow : Window, IUiInteraction
             .Where(p => !string.IsNullOrWhiteSpace(p))
             .Select(p => p!)
             .ToList();
+
+        e.Handled = true;
 
         if (paths.Count > 0)
         {

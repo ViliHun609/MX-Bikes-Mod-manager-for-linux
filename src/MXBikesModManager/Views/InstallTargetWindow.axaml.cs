@@ -12,6 +12,7 @@ public partial class InstallTargetWindow : Window
 
     private readonly List<ModTypeConfig> _types = new();
     private readonly IReadOnlyList<string> _paintBikes = Array.Empty<string>();
+    private readonly InstallPlan? _plan;
     private ModTypeConfig? _bikeType;
 
     public InstallTargetWindow()
@@ -24,6 +25,7 @@ public partial class InstallTargetWindow : Window
         IEnumerable<ModTypeConfig> types,
         IReadOnlyList<string>? paintBikes = null) : this()
     {
+        _plan = plan;
         _types.AddRange(types);
         _bikeType = _types.FirstOrDefault(t => string.Equals(t.Key, "bikes", StringComparison.OrdinalIgnoreCase));
         _paintBikes = paintBikes ?? Array.Empty<string>();
@@ -31,7 +33,7 @@ public partial class InstallTargetWindow : Window
         FileText.Text = Path.GetFileName(plan.SourcePath);
         KindText.Text = plan.IsBikePaint
             ? $"Detected: {plan.DetectedKind} · choose the bike it belongs to"
-            : $"Detected: {plan.DetectedKind} · {plan.Files.Count} files planned";
+            : $"Detected: {plan.DetectedKind} · {DescribeCount(plan)}";
 
         PaintBikeBox.ItemsSource = _paintBikes;
 
@@ -41,20 +43,35 @@ public partial class InstallTargetWindow : Window
         if (plan.IsBikePaint)
         {
             TypeList.SelectedItem = options.FirstOrDefault(o => o.Key == PaintTypeKey);
-            var suggested = plan.PaintBikeFolder
-                            ?? InstallService.SuggestPaintBike(plan.SourcePath, _paintBikes);
-            if (!string.IsNullOrWhiteSpace(suggested)) PaintBikeBox.Text = suggested;
         }
         else
         {
             var preferred = options.FirstOrDefault(o =>
-                    o.Key == plan.DetectedTypeKey ||
-                    (plan.Type is not null && o.Key == plan.Type.Key))
+                    o.Key == plan.Type?.Key ||
+                    o.Key == plan.DetectedTypeKey)
                 ?? options.FirstOrDefault();
             TypeList.SelectedItem = preferred;
         }
 
         ApplySelection(TypeList.SelectedItem as ModTypeConfig);
+
+        PaintBikeBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == AutoCompleteBox.TextProperty &&
+                TypeList.SelectedItem is ModTypeConfig selected)
+            {
+                UpdateTarget(selected);
+            }
+        };
+
+        SubfolderBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == AutoCompleteBox.TextProperty &&
+                TypeList.SelectedItem is ModTypeConfig selected)
+            {
+                UpdateTarget(selected);
+            }
+        };
 
         if (plan.Warnings.Count > 0)
         {
@@ -65,6 +82,14 @@ public partial class InstallTargetWindow : Window
         {
             ShowWarning("No bike folders were found in mods/bikes. Install the bike first, then add paints.");
         }
+    }
+
+    private static string DescribeCount(InstallPlan plan)
+    {
+        var count = plan.Files.Count > 0
+            ? plan.Files.Count
+            : plan.IsDirectCopy ? 1 : plan.Entries.Count;
+        return count == 1 ? "1 file" : $"{count} files";
     }
 
     private List<ModTypeConfig> BuildOptions()
@@ -106,9 +131,88 @@ public partial class InstallTargetWindow : Window
 
         var isPaint = IsPaint(type);
         PaintPanel.IsVisible = isPaint;
-        SubfolderPanel.IsVisible = !isPaint;
-        if (!isPaint) SubfolderBox.Text = type.InstallSubfolder;
+
+        if (isPaint && string.IsNullOrWhiteSpace(PaintBikeBox.Text) && _plan is not null)
+        {
+            var suggested = _plan.PaintBikeFolder
+                            ?? InstallService.SuggestPaintBike(_plan.SourcePath, _paintBikes);
+            if (!string.IsNullOrWhiteSpace(suggested)) PaintBikeBox.Text = suggested;
+        }
+
+        var subfolders = isPaint ? new List<string>() : GetSubfolders(type);
+        SubfolderPanel.IsVisible = subfolders.Count > 0;
+
+        if (!isPaint && subfolders.Count > 0)
+        {
+            SubfolderBox.ItemsSource = subfolders;
+            var suggested = _plan is null ? null : InstallService.SuggestSubfolder(_plan.SourcePath, type);
+            SubfolderBox.Text = suggested ?? type.InstallSubfolder;
+        }
+        else if (!isPaint)
+        {
+            SubfolderBox.Text = string.Empty;
+        }
+
+        UpdateTarget(type);
         HideWarning();
+    }
+
+    private static List<string> GetSubfolders(ModTypeConfig type)
+    {
+        var subfolders = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(type.InstallSubfolder))
+        {
+            subfolders.Add(type.InstallSubfolder);
+        }
+
+        foreach (var subfolder in type.ScanSubfolders)
+        {
+            if (!string.IsNullOrWhiteSpace(subfolder) &&
+                !subfolders.Contains(subfolder, StringComparer.OrdinalIgnoreCase))
+            {
+                subfolders.Add(subfolder);
+            }
+        }
+
+        return subfolders
+            .OrderBy(subfolder => subfolder, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private void UpdateTarget(ModTypeConfig type)
+    {
+        if (IsPaint(type))
+        {
+            var bike = PaintBikeBox.Text?.Trim();
+            TargetText.Text = string.IsNullOrWhiteSpace(bike)
+                ? "Target: bikes/<bike>/paints/"
+                : $"Target: bikes/{bike}/paints/";
+            return;
+        }
+
+        var subfolder = SubfolderBox.Text?.Trim();
+        var root = string.IsNullOrWhiteSpace(subfolder)
+            ? type.Folder
+            : $"{type.Folder}/{subfolder}";
+
+        if (_plan is null)
+        {
+            TargetText.Text = $"Target: {root}/";
+        }
+        else if (_plan.IsDirectCopy)
+        {
+            TargetText.Text = $"Target: {root}/{Path.GetFileName(_plan.SourcePath)}";
+        }
+        else if (_plan.IsFolderCopy)
+        {
+            var name = Path.GetFileName(_plan.SourcePath.TrimEnd(Path.DirectorySeparatorChar));
+            TargetText.Text = $"Target: {root}/{name}";
+        }
+        else
+        {
+            TargetText.Text = $"Target: {root}/  (archive contents)";
+        }
     }
 
     private static bool IsPaint(ModTypeConfig type) =>
@@ -154,6 +258,14 @@ public partial class InstallTargetWindow : Window
         }
 
         var subfolder = string.IsNullOrWhiteSpace(SubfolderBox.Text) ? null : SubfolderBox.Text.Trim();
+        if (subfolder is not null &&
+            (subfolder.Contains('/') || subfolder.Contains('\\') ||
+             subfolder is "." or ".."))
+        {
+            ShowWarning("The subfolder must be a single folder name (for example “boots”).");
+            return;
+        }
+
         Close(new InstallChoice(type, subfolder));
     }
 

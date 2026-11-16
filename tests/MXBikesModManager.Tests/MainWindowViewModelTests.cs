@@ -97,4 +97,51 @@ public class MainWindowViewModelTests
         Assert.Equal("misc", ui.Plan!.Type!.Key);
         Assert.True(File.Exists(Path.Combine(env.ModsRoot, "misc", "paint.pnt")));
     }
+
+    [Fact]
+    public async Task Boots_install_into_rider_boots_when_chosen_in_the_dialog()
+    {
+        using var env = new TestEnvironment();
+        var pkz = env.Touch("downloads/Fox Instinct 2.0 by Aeffertz.pkz", "boot-payload");
+
+        var ui = new FakeUi
+        {
+            Choice = new InstallChoice(env.Type("rider"), "boots")
+        };
+        // The Bikes tab is active, but the file name says boots, so Rider is suggested.
+        var vm = new MainWindowViewModel(env.Config, ui, "bikes");
+        vm.Initialize();
+
+        await vm.InstallPathsAsync(new[] { pkz });
+
+        Assert.NotNull(ui.Plan);
+        Assert.Equal("rider", ui.Plan!.DetectedTypeKey);
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "rider", "boots", "Fox Instinct 2.0 by Aeffertz.pkz")));
+        Assert.False(File.Exists(Path.Combine(
+            env.ModsRoot, "rider", "Fox Instinct 2.0 by Aeffertz.pkz")));
+    }
+
+    [Fact]
+    public async Task Already_ready_layout_archives_still_show_the_confirmation_dialog()
+    {
+        using var env = new TestEnvironment();
+        var zip = Path.Combine(env.Root, "pack.zip");
+        using (var archive = System.IO.Compression.ZipFile.Open(zip, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            using var stream = archive.CreateEntry("bikes/Thing.pkz").Open();
+            using var writer = new StreamWriter(stream);
+            writer.Write("bike");
+        }
+
+        var ui = new FakeUi { Choice = new InstallChoice(env.Type("bikes"), null) };
+        var vm = new MainWindowViewModel(env.Config, ui, "bikes");
+        vm.Initialize();
+
+        await vm.InstallPathsAsync(new[] { zip });
+
+        Assert.NotNull(ui.Plan);
+        Assert.True(ui.Plan!.HasGameLayout);
+        Assert.True(File.Exists(Path.Combine(env.ModsRoot, "bikes", "Thing.pkz")));
+    }
 }

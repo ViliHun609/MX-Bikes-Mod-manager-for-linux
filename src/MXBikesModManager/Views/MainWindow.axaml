@@ -27,6 +27,7 @@
             <TextBlock Text="MX Bikes Mod Manager" FontSize="17" FontWeight="Bold" />
             <TextBlock Text="{Binding ModsRoot}" Classes="muted" FontSize="11" MaxWidth="640"
                        TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ModsRoot}" />
+            <TextBlock Text="Drag &amp; drop .zip, .pkz or .pnt files anywhere to install" Classes="muted" FontSize="10" />
           </StackPanel>
         </StackPanel>
 
@@ -87,6 +88,24 @@
         </StackPanel>
       </Grid>
     </Grid>
+
+    <!-- Drop target overlay -->
+    <Border x:Name="DropOverlay"
+            Grid.Row="0" Grid.RowSpan="4"
+            IsVisible="False" IsHitTestVisible="False"
+            Background="#d910161f"
+            BorderBrush="{DynamicResource AccentBrush}"
+            BorderThickness="3"
+            CornerRadius="10"
+            Margin="8">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text="Drop to install" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" />
+        <TextBlock Text=".zip · .7z · .rar · .pkz · .pnt · folders"
+                   Classes="muted" FontSize="13" HorizontalAlignment="Center" />
+        <TextBlock Text="You'll confirm the type and target before anything is copied."
+                   Classes="muted" FontSize="12" HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
 
   </Grid>
 </Window>

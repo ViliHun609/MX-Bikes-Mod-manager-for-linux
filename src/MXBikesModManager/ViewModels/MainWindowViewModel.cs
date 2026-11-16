@@ -257,32 +257,37 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         foreach (var path in paths)
         {
+            // Pass the current tab as a suggestion only; every install is confirmed in the dialog.
             var plan = _installer.Analyze(path, SelectedType?.Type.Key);
 
-            if (plan.NeedsTypeChoice || plan.IsBikePaint)
+            var paintBikes = _installer.GetPaintBikes();
+            var choice = await Interaction.PickInstallTypeAsync(plan, paintBikes);
+            if (choice is null)
             {
-                var paintBikes = plan.IsBikePaint
-                    ? _installer.GetPaintBikes()
-                    : Array.Empty<string>();
-                var choice = await Interaction.PickInstallTypeAsync(plan, paintBikes);
-                if (choice is null)
+                Status = $"Skipped {Path.GetFileName(path)}.";
+                continue;
+            }
+
+            if (!string.IsNullOrWhiteSpace(choice.PaintBike))
+            {
+                if (!_installer.FinalizePaint(plan, choice.PaintBike))
                 {
-                    Status = $"Skipped {Path.GetFileName(path)}.";
+                    var warning = string.Join(Environment.NewLine, plan.Warnings);
+                    await Interaction.ShowMessageAsync(
+                        $"Cannot install {Path.GetFileName(path)}",
+                        warning.Length > 0 ? warning : "No paint files were found.");
                     continue;
                 }
+            }
+            else
+            {
+                var keepDetectedLayout =
+                    plan.HasGameLayout &&
+                    plan.Type is not null &&
+                    string.Equals(plan.Type.Key, choice.Type.Key, StringComparison.OrdinalIgnoreCase) &&
+                    string.IsNullOrWhiteSpace(choice.Subfolder);
 
-                if (!string.IsNullOrWhiteSpace(choice.PaintBike))
-                {
-                    if (!_installer.FinalizePaint(plan, choice.PaintBike))
-                    {
-                        var warning = string.Join(Environment.NewLine, plan.Warnings);
-                        await Interaction.ShowMessageAsync(
-                            $"Cannot install {Path.GetFileName(path)}",
-                            warning.Length > 0 ? warning : "No paint files were found.");
-                        continue;
-                    }
-                }
-                else
+                if (!keepDetectedLayout)
                 {
                     _installer.Finalize(plan, choice.Type, choice.Subfolder);
                 }

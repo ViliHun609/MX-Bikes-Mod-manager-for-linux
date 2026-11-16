@@ -82,15 +82,20 @@ public class InstallServiceTests
     }
 
     [Fact]
-    public async Task Bare_pkz_goes_into_the_chosen_type_folder()
+    public async Task Bare_pkz_asks_for_a_type_but_suggests_the_current_tab()
     {
         using var env = new TestEnvironment();
         var pkz = env.Touch("downloads/Dune_Bike.pkz", "payload");
 
         var installer = new InstallService(env.Config);
         var plan = installer.Analyze(pkz, preferredTypeKey: "bikes");
-        Assert.False(plan.NeedsTypeChoice);
 
+        // PiBoSo .pkz files are obfuscated, so the type must always be confirmed.
+        Assert.True(plan.NeedsTypeChoice);
+        Assert.Null(plan.Type);
+        Assert.Equal("bikes", plan.DetectedTypeKey);
+
+        installer.Finalize(plan, env.Type(plan.DetectedTypeKey!));
         var result = await installer.InstallAsync(plan);
 
         Assert.True(result.Success);
@@ -144,6 +149,8 @@ public class InstallServiceTests
         var installer = new InstallService(env.Config);
         var plan = installer.Analyze(source, preferredTypeKey: "bikes");
 
+        Assert.True(plan.NeedsTypeChoice);
+        installer.Finalize(plan, env.Type("bikes"));
         Assert.True(plan.Ready);
         var result = await installer.InstallAsync(plan);
 
@@ -295,5 +302,56 @@ public class InstallServiceTests
         Assert.Equal("MX1OEM_2023_KTM_450_SX-F",
             InstallService.SuggestPaintBike("/tmp/MX1OEM_2023_KTM_450_SX-F_paint.zip", bikes));
         Assert.Null(InstallService.SuggestPaintBike("/tmp/random graphics.zip", bikes));
+    }
+
+    [Theory]
+    [InlineData("Fox Instinct 2.0 by Aeffertz.pkz", "rider")]
+    [InlineData("Dunlop MX33 tyre.zip", "tyres")]
+    [InlineData("Red Bull Supercross track.zip", "tracks")]
+    [InlineData("KTM SXF 450 graphics.zip", "bike-paint")]
+    [InlineData("Honda CRF 450.pkz", "bikes")]
+    public void Suggests_the_mod_type_from_the_file_name(string fileName, string expected)
+    {
+        using var env = new TestEnvironment();
+        var installer = new InstallService(env.Config);
+
+        var suggested = installer.SuggestTypeKey(Path.Combine("/tmp", fileName), fallback: "misc");
+
+        Assert.Equal(expected, suggested);
+    }
+
+    [Theory]
+    [InlineData("Fox Instinct 2.0 by Aeffertz.pkz", "boots")]
+    [InlineData("Fox V3 Helmet.zip", "helmets")]
+    [InlineData("Leatt Chest Protector.zip", "protections")]
+    [InlineData("Aeffertz rider gear.zip", "riders")]
+    [InlineData("GoPro helmet cam.zip", "helmetcams")]
+    public void Suggests_rider_subfolders_from_the_file_name(string fileName, string expected)
+    {
+        using var env = new TestEnvironment();
+        var source = Path.Combine("/tmp", fileName);
+
+        Assert.Equal(expected, InstallService.SuggestSubfolder(source, env.Type("rider")));
+    }
+
+    [Fact]
+    public async Task Full_layout_archive_can_be_retargeted_to_another_type()
+    {
+        using var env = new TestEnvironment();
+        var zip = MakeZip(env.Root, "layout.zip", ("bikes/Thing.pkz", "bike"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+        Assert.True(plan.HasGameLayout);
+        Assert.Equal("bikes", plan.Type!.Key);
+
+        // The dialog lets the user correct the detected type.
+        installer.Finalize(plan, env.Type("misc"));
+
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        Assert.True(File.Exists(Path.Combine(env.ModsRoot, "misc", "Thing.pkz")));
+        Assert.False(File.Exists(Path.Combine(env.ModsRoot, "misc", "bikes", "Thing.pkz")));
     }
 }

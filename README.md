@@ -23,9 +23,11 @@ instantly by renaming them in place.
   Rider/Misc get chips from their subfolders (Helmets, Boots, Protections, Riders,
   Animations, Helmet Cams, Fonts…). Chips are ordered by mod count and the **Category**
   sort groups the grid by category, then name.
-- **Install mods** — drag & drop or pick `.zip`, `.7z`, `.rar`, `.tar.gz`, a bare `.pkz`
-  or a folder. Archives are routed automatically (game folder layout, `.map`/`.tyre`
-  detection) and you're asked to pick a type only when it's genuinely ambiguous.
+- **Install mods** — drag & drop anywhere in the window (a full-screen drop hint appears) or pick
+  `.zip`, `.7z`, `.rar`, `.tar.gz`, a bare `.pkz` or a folder. Every install opens a
+  confirmation dialog showing what was detected, the target path, and the type and
+  subfolder — so boots go to `rider/boots`, helmets to `rider/helmets`, etc. Bare `.pkz`
+  files are obfuscated, so the type is guessed from the file name and always confirmed.
 - **Bike paint jobs** — drop a `.pnt` file or a paint pack and the app detects it, asks
   which bike it belongs to (with a searchable bike picker, pre-filled when the bike name
   is in the file name) and installs it to `bikes/<bike>/paints/`. If the detection is
@@ -66,9 +68,10 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-48 tests cover scanning/pairing, name-based categories, toggling, installs (including
-zip-slip attempts, paint targeting and backups), TGA decoding (uncompressed + RLE),
-PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix detection.
+61 tests cover scanning/pairing, name-based categories, toggling, installs (including
+zip-slip attempts, type/subfolder suggestions and confirmation, paint targeting and
+backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, the metadata cache, and
+Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
