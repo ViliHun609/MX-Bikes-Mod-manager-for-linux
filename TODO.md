@@ -4,15 +4,14 @@ Status of the current batch of work. Update the checkboxes as things change.
 
 ## Current: bikes/tracks icon polish
 
-- [x] Replace the muddy UIX bikes glyph with the Font Awesome motorcycle (non-zero fill)
+- [x] Replace the bikes glyph with a simplified right-facing dirt bike
+      (UIX enduro solid + wheel hub holes)
 - [x] Replace the muddy UIX track glyph with the Font Awesome checkered flag
-- [x] Nudge tab icons to 16 px for legibility
-- [x] Remove the now-unused UIX paths and credits
+- [x] Nudge tab icons to 17 px for legibility
+- [x] Keep MIT / CC BY credits accurate (Bootstrap, UIX, Font Awesome)
 - [x] Build + 108 tests pass
 - [ ] User visual check in the tab bar
-- [x] Commit (`eb358eb`)
-- [x] Rebuild the AppImage and record the new SHA-256:
-      `d271e53dc13c331725baa4c327391c6925c59e357a3023d3598f95336cbb9b10`
+- [ ] Commit and rebuild the AppImage
 
 ## Cleanup pass (done)
 
