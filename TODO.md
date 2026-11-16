@@ -2,7 +2,17 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Current: cleanup pass
+## Current: bikes/tracks icon polish
+
+- [x] Replace the muddy UIX bikes glyph with the Font Awesome motorcycle (non-zero fill)
+- [x] Replace the muddy UIX track glyph with the Font Awesome checkered flag
+- [x] Nudge tab icons to 16 px for legibility
+- [x] Remove the now-unused UIX paths and credits
+- [x] Build + 108 tests pass
+- [ ] User visual check in the tab bar
+- [ ] Commit and rebuild the AppImage
+
+## Cleanup pass (done)
 
 - [x] Remove unused config keys (`version`, `layout`, tile sizes, `defaultSort`,
       `rememberWindow`, `scanDepth`, `disableStrategy`)

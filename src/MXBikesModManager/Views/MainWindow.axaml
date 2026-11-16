@@ -85,7 +85,7 @@
       <TabControl.ItemTemplate>
         <DataTemplate x:DataType="vm:ModTypeViewModel">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,2">
-            <Path Data="{Binding IconGeometry}" Width="15" Height="15" Stretch="Uniform"
+            <Path Data="{Binding IconGeometry}" Width="16" Height="16" Stretch="Uniform"
                   Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
             <Border Background="{DynamicResource TabCountBg}" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
