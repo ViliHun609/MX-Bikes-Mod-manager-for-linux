@@ -19,8 +19,24 @@ internal static class Program
     }
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+    {
+        var builder = AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();
+
+        // The X11 backend runs through XWayland on Wayland desktops, and Wayland→XWayland
+        // file drops are unreliable (notably on Hyprland). Use the native Wayland backend
+        // when a compositor is available so drag & drop works from native file managers.
+        // MXB_FORCE_X11=1 is the escape hatch if a compositor misbehaves.
+        var forceX11 = Environment.GetEnvironmentVariable("MXB_FORCE_X11") is "1" or "true";
+        if (!forceX11 &&
+            OperatingSystem.IsLinux() &&
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")))
+        {
+            builder = builder.UseWayland();
+        }
+
+        return builder;
+    }
 }

@@ -125,36 +125,54 @@ public partial class MainWindow : Window, IUiInteraction
 
     public async Task<IReadOnlyList<string>> PickModArchivesAsync()
     {
-        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        try
         {
-            Title = "Install MX Bikes mods",
-            AllowMultiple = true,
-            FileTypeFilter = new[]
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                new FilePickerFileType("MX Bikes mods")
+                Title = "Install MX Bikes mods",
+                AllowMultiple = true,
+                FileTypeFilter = new[]
                 {
-                    Patterns = new[] { "*.zip", "*.7z", "*.rar", "*.pkz", "*.tar", "*.gz", "*.tgz" }
-                },
-                new FilePickerFileType("All files") { Patterns = new[] { "*" } }
-            }
-        });
+                    new FilePickerFileType("MX Bikes mods")
+                    {
+                        Patterns = new[] { "*.zip", "*.7z", "*.rar", "*.pkz", "*.tar", "*.gz", "*.tgz" }
+                    },
+                    new FilePickerFileType("All files") { Patterns = new[] { "*" } }
+                }
+            });
 
-        return files
-            .Select(f => f.TryGetLocalPath())
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .Select(p => p!)
-            .ToList();
+            return files
+                .Select(f => f.TryGetLocalPath())
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p => p!)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _config.Log.Error("File picker failed", ex);
+            _viewModel.Status = $"Could not open the file picker: {ex.Message}";
+            return Array.Empty<string>();
+        }
     }
 
     public async Task<string?> PickModsFolderAsync()
     {
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        try
         {
-            Title = "Select the MX Bikes mods folder",
-            AllowMultiple = false
-        });
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Select the MX Bikes mods folder",
+                AllowMultiple = false
+            });
 
-        return folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
+            return folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
+        }
+        catch (Exception ex)
+        {
+            _config.Log.Error("Folder picker failed", ex);
+            _viewModel.Status = $"Could not open the folder picker: {ex.Message}";
+            return null;
+        }
     }
 
     public async Task<InstallChoice?> PickInstallTypeAsync(InstallPlan plan, IReadOnlyList<string> paintBikes)

@@ -39,7 +39,7 @@
     <StackPanel x:Name="PaintPanel" Spacing="6" IsVisible="False">
       <TextBlock Text="Which bike is this paint for?" Classes="muted" FontSize="12" />
       <AutoCompleteBox x:Name="PaintBikeBox"
-                       Watermark="Start typing a bike name…"
+                       PlaceholderText="Start typing a bike name…"
                        FilterMode="Contains"
                        MinimumPrefixLength="1" />
     </StackPanel>
@@ -47,7 +47,7 @@
     <StackPanel x:Name="SubfolderPanel" Spacing="6">
       <TextBlock Text="Subfolder" Classes="muted" FontSize="12" />
       <AutoCompleteBox x:Name="SubfolderBox"
-                       Watermark="Leave empty for the type folder"
+                       PlaceholderText="Leave empty for the type folder"
                        FilterMode="Contains"
                        MinimumPrefixLength="0" />
       <TextBlock Text="Pick boots, helmets, protections… or type a custom folder." Classes="muted" FontSize="11" />

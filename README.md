@@ -200,3 +200,6 @@ data/                             runtime data (gitignored)
   path geometries in `AppIcons`.
 - Drag & drop diagnostics are written to `data/logs/app.log` (formats offered by the
   file manager, dropped item count, and resolved local paths).
+- On Wayland sessions the app starts Avalonia's native Wayland backend, which supports
+  file drag & drop from native file managers (the XWayland path on Hyprland cannot).
+  Set `MXB_FORCE_X11=1` to force the XWayland backend if a compositor misbehaves.

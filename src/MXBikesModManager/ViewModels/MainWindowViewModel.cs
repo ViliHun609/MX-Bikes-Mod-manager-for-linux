@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MXBikesModManager.Models;
@@ -94,7 +96,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                           as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
             if (window?.Clipboard is not null)
             {
-                _ = window.Clipboard.SetTextAsync(text);
+                _ = window.Clipboard.SetValueAsync(DataFormat.Text, text);
                 Status = "Path copied to clipboard.";
             }
         }

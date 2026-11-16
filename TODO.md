@@ -12,10 +12,15 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Call `DragDrop.SetAllowDrop` in code as well as XAML
 - [x] Log drag formats, item counts and resolved paths to `data/logs/app.log`
 - [x] Report non-local drops and catch install errors in the status bar
-- [ ] User performs one real drag (then we read the log)
-- [x] Commit this batch (`7ff4ba2`)
-- [x] Rebuild the AppImage and record the new SHA-256:
-      `f829b51eb142562077d4e1753a1eb2da1fa17404ca0c6ce337e894fc8d193797`
+- [x] Diagnose the real cause: Avalonia 11.3's X11 backend has no XDND support
+- [x] Upgrade Avalonia 11.3.23 → 12.1.6 (full X11 XDND support)
+- [x] Add the native `Avalonia.Wayland` backend for Wayland sessions
+      (Wayland→XWayland drops are broken on Hyprland); `MXB_FORCE_X11=1` escape hatch
+- [x] Catch file/folder picker failures (portal issues now show a clear message)
+- [x] Remove `Avalonia.Diagnostics` (no 12.x package; debug inspector shortcut is gone)
+- [ ] User performs one real drag from Nautilus (then we read the log)
+- [ ] Commit this batch
+- [ ] Rebuild the AppImage and record the new SHA-256
 
 ## Themes (done)
 

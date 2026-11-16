@@ -67,17 +67,25 @@ public partial class SettingsWindow : Window
 
     private async void OnBrowse(object? sender, RoutedEventArgs e)
     {
-        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        try
         {
-            Title = "Select the MX Bikes mods folder",
-            AllowMultiple = false
-        });
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Select the MX Bikes mods folder",
+                AllowMultiple = false
+            });
 
-        var path = folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
-        if (!string.IsNullOrWhiteSpace(path))
+            var path = folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                ModsRootBox.Text = path;
+                HideWarning();
+            }
+        }
+        catch (Exception ex)
         {
-            ModsRootBox.Text = path;
-            HideWarning();
+            _config.Log.Error("Folder picker failed", ex);
+            ShowWarning($"Could not open the folder picker: {ex.Message}");
         }
     }
 

@@ -73,7 +73,7 @@
                Text="Usually inside the Proton prefix: compatdata/655500/pfx/drive_c/users/steamuser/My Documents/PiBoSo/MX Bikes/mods" />
 
     <Grid ColumnDefinitions="*,Auto,Auto">
-      <TextBox x:Name="ModsRootBox" Watermark="/path/to/…/My Documents/PiBoSo/MX Bikes/mods" />
+      <TextBox x:Name="ModsRootBox" PlaceholderText="/path/to/…/My Documents/PiBoSo/MX Bikes/mods" />
       <Button Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Click="OnBrowse" />
       <Button Grid.Column="2" Content="Auto-detect" Margin="8,0,0,0" Click="OnDetect" />
     </Grid>
