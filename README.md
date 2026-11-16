@@ -45,9 +45,9 @@ instantly by renaming them in place.
   **Settings → Theme**. Click a card to preview it live; Save keeps it, Cancel restores
   the previous one. The choice is stored as `ui.theme`, and `--theme <name>` overrides it
   for a single run.
-- **Vector icons** — Bootstrap Icons and UIX Icons (MIT), plus Font Awesome Free
-  (icons CC BY 4.0), for mod types, tabs, the install-type picker, empty states and
-  toolbar buttons; no emoji, scales cleanly on HiDPI screens.
+- **Vector icons** — Bootstrap Icons (MIT), Font Awesome Free (icons CC BY 4.0) and a
+  custom dirt-bike silhouette for the Bikes tab, used across tabs, the install-type
+  picker, empty states and toolbar buttons; no emoji, scales cleanly on HiDPI screens.
 - **Non-destructive** — replaced files are backed up to `data/backups/…`, removed mods go
   to `data/trash/…`, and every operation is logged to `data/logs/app.log`.
 - **Search, sort (name/category/size/newest), hide disabled, bulk enable/disable/remove**,
@@ -208,9 +208,9 @@ data/                             runtime data (gitignored)
   decoder, PNG/JPEG/BMP/WebP by Avalonia/Skia.
 - Scans only read ZIP central directories and file metadata, so ~200 mods / 13 GB scan in
   well under a second after the metadata cache is warm.
-- Icons are from [Bootstrap Icons](https://icons.getbootstrap.com/) 1.11.3,
-  [UIX Icons](https://github.com/mdrakibshekh/uix-icons) (both MIT), and
-  [Font Awesome Free](https://fontawesome.com/) (icons CC BY 4.0), embedded as vector
+- Icons are from [Bootstrap Icons](https://icons.getbootstrap.com/) 1.11.3 (MIT) and
+  [Font Awesome Free](https://fontawesome.com/) (icons CC BY 4.0), plus a custom
+  dirt-bike silhouette traced from the user's reference image; all embedded as vector
   path geometries in `AppIcons`.
 - Drag & drop diagnostics are written to `data/logs/app.log` (formats offered by the
   file manager, dropped item count, and resolved local paths).
