@@ -20,9 +20,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] README + config docs
 - [ ] User re-tests “2024 GEAR FASTHOUSE.rar” (should land in `rider/riders/default_mx/paints`)
 - [ ] User checks a folder drop and the Trash toggle
-- [x] Commit this batch (`0fd5835`)
+- [x] Commit this batch (`0fd5835`, rider paint fix `bb14332`)
 - [x] Rebuild the AppImage and record the new SHA-256:
-      `f6c993a2dd45638c52fe14eafe242a7bb2d8b5aba611e571c92432c90fee57e3`
+      `e7700651b6e3b3c210957cd8e9c88e03f8bf0a8a5e25446ddb2d1bbc0a1e265e`
 - [x] Build script now packages to a `.new` file and moves it into place, so a running
       AppImage no longer blocks rebuilds
 
