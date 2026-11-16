@@ -43,6 +43,8 @@ instantly by renaming them in place.
   to `data/trash/…`, and every operation is logged to `data/logs/app.log`.
 - **Search, sort (name/category/size/newest), hide disabled, bulk enable/disable/remove**,
   launch the game, open the mods folder, copy paths.
+- **Smooth scrolling** — the mod grid eases mouse-wheel scrolls instead of jumping, with
+  native touchpad inertia. Toggle it under **Settings → Smooth scrolling**.
 - **Auto-detection** — finds the prefix via `libraryfolders.vdf` across native Steam
   libraries and Flatpak Steam; manual folder picker if that fails.
 - **Portable** — config, cache, thumbnails, backups and logs all live inside this repo
@@ -76,10 +78,10 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-76 tests cover scanning/pairing, name-based categories, toggling, installs (including
+86 tests cover scanning/pairing, name-based categories, toggling, installs (including
 zip-slip attempts, type/subfolder suggestions and confirmation, paint targeting and
-backups), themes and icon resolution, TGA decoding (uncompressed + RLE), PiBoSo INI
-metadata, the metadata cache, and Steam/Proton prefix detection.
+backups), themes and icon resolution, smooth-scroll maths, TGA decoding (uncompressed +
+RLE), PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
@@ -118,6 +120,7 @@ repo root. The file is created automatically if it is missing.
     "tileHeight": 190,
     "showPreviews": true,
     "hideDisabledByDefault": false,
+    "smoothScrolling": true,
     "theme": "ember"
   }
 }
@@ -125,6 +128,7 @@ repo root. The file is created automatically if it is missing.
 
 - `ui.theme` — one of `ember`, `midnight`, `forest`, `violet`, `mono`. Unknown values fall
   back to `ember`.
+- `ui.smoothScrolling` — eased mouse-wheel scrolling in the mod grid (default `true`).
 
 - `modsRoot` — the game's mods folder inside the Proton prefix. Auto-detected when empty.
 - `data.root` — relative paths resolve against the config file's folder, keeping

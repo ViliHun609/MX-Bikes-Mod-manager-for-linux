@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:MXBikesModManager.ViewModels"
+             xmlns:behaviors="using:MXBikesModManager.Behaviors"
              x:Class="MXBikesModManager.Views.ModTypeView"
              x:DataType="vm:ModTypeViewModel">
 
@@ -47,7 +48,9 @@
       </Grid>
     </Border>
 
-    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled"
+                  ScrollViewer.IsScrollInertiaEnabled="True"
+                  behaviors:SmoothScroll.IsEnabled="{Binding SmoothScrolling}">
       <Panel>
         <ItemsControl ItemsSource="{Binding FilteredItems}" Margin="6">
           <ItemsControl.ItemsPanel>

@@ -32,6 +32,7 @@ public partial class SettingsWindow : Window
         AutoDetectCheck.IsChecked = config.Config.Game.AutoDetect;
         ShowPreviewsCheck.IsChecked = config.Config.Ui.ShowPreviews;
         HideDisabledCheck.IsChecked = config.Config.Ui.HideDisabledByDefault;
+        SmoothScrollCheck.IsChecked = config.Config.Ui.SmoothScrolling;
         DataPathText.Text = config.Data.Root;
         Title = $"Settings — {config.Config.Game.Name}";
 
@@ -136,6 +137,7 @@ public partial class SettingsWindow : Window
         _config.Config.Game.AutoDetect = AutoDetectCheck.IsChecked == true;
         _config.Config.Ui.ShowPreviews = ShowPreviewsCheck.IsChecked == true;
         _config.Config.Ui.HideDisabledByDefault = HideDisabledCheck.IsChecked == true;
+        _config.Config.Ui.SmoothScrolling = SmoothScrollCheck.IsChecked == true;
         _config.Config.Ui.Theme = (ThemeList.SelectedItem as ThemeOptionViewModel)?.Key ?? _originalTheme;
 
         if (!_config.Save())

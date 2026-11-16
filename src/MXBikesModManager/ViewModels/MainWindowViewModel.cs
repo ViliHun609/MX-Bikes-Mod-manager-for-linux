@@ -84,7 +84,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             status: text => Status = text)
         {
             Owner = this,
-            HideDisabled = _config.Config.Ui.HideDisabledByDefault
+            HideDisabled = _config.Config.Ui.HideDisabledByDefault,
+            SmoothScrolling = _config.Config.Ui.SmoothScrolling
         };
     }
 
@@ -423,6 +424,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         foreach (var type in Types)
         {
             type.HideDisabled = _config.Config.Ui.HideDisabledByDefault;
+            type.SmoothScrolling = _config.Config.Ui.SmoothScrolling;
         }
         StaticsReset();
     }

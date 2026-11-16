@@ -81,6 +81,7 @@
     <CheckBox x:Name="AutoDetectCheck" Content="Auto-detect the folder on startup" />
     <CheckBox x:Name="ShowPreviewsCheck" Content="Show preview images (track cover art inside .pkz files)" />
     <CheckBox x:Name="HideDisabledCheck" Content="Hide disabled mods by default" />
+    <CheckBox x:Name="SmoothScrollCheck" Content="Smooth scrolling (eased mouse-wheel scrolling)" />
 
     <Border Background="{DynamicResource PanelBgAlt}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
             CornerRadius="8" Padding="12">

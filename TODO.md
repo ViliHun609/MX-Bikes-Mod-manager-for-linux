@@ -2,26 +2,30 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Current: motocross icons + drag & drop
+## Current: smooth scrolling
 
-- [x] Replace the Bikes icon with the UIX solid motocross bike (MIT)
-- [x] Replace the Tracks icon with the UIX solid motocross track (MIT)
-- [x] Keep icon keys (`bike`, `track`) and all old emoji aliases working
-- [x] Add a `DragEnter` handler alongside DragOver / DragLeave / Drop
-- [x] Detect drops with `TryGetFiles()` instead of only `Contains(DataFormat.File)`
-- [x] Call `DragDrop.SetAllowDrop` in code as well as XAML
-- [x] Log drag formats, item counts and resolved paths to `data/logs/app.log`
-- [x] Report non-local drops and catch install errors in the status bar
-- [x] Diagnose the real cause: Avalonia 11.3's X11 backend has no XDND support
-- [x] Upgrade Avalonia 11.3.23 → 12.1.6 (full X11 XDND support)
-- [x] Add the native `Avalonia.Wayland` backend for Wayland sessions
-      (Wayland→XWayland drops are broken on Hyprland); `MXB_FORCE_X11=1` escape hatch
-- [x] Catch file/folder picker failures (portal issues now show a clear message)
-- [x] Remove `Avalonia.Diagnostics` (no 12.x package; debug inspector shortcut is gone)
-- [ ] User performs one real drag from Nautilus (then we read the log)
-- [x] Commit this batch (`ed228b3`)
-- [x] Rebuild the AppImage and record the new SHA-256:
-      `378d9fa6bfce6f281237ce48e58cbf7f5419064ea0400ad1af1530f0e194ab39`
+- [x] `SmoothScroll` attached behaviour for `ScrollViewer` (eased wheel animation)
+- [x] Clamp to the scrollable range, Shift+wheel horizontal support
+- [x] Cancel immediately on mouse press / scrollbar drag
+- [x] Enable native touch/touchpad inertia on the grid
+- [x] `ui.smoothScrolling` setting + Settings checkbox (default on, applies live)
+- [x] Unit tests for the scroll maths and config default (86 total)
+- [x] README + config docs
+- [ ] User checks the feel (tune ease/time if needed)
+- [ ] Commit this batch
+- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Decided against extra blur effects for now
+
+## Drag & drop / Avalonia 12 (done)
+
+- [x] Diagnose Avalonia 11.3's missing X11 XDND support
+- [x] Upgrade Avalonia 11.3.23 → 12.1.6
+- [x] Native `Avalonia.Wayland` backend for Wayland sessions; `MXB_FORCE_X11=1` escape hatch
+- [x] Drag diagnostics in `data/logs/app.log`
+- [x] File/folder picker error handling
+- [ ] User performs one real drag from Nautilus (still outstanding)
+- [x] Commit (`ed228b3`)
+- [x] AppImage SHA-256: `378d9fa6bfce6f281237ce48e58cbf7f5419064ea0400ad1af1530f0e194ab39`
 
 ## Themes (done)
 
@@ -36,10 +40,11 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Verify the theme engine + cards visually (Midnight/Violet)
 - [x] Commit the theme work (`5709daa`)
 
-## Icons (done, minus the motocross swap above)
+## Icons (done)
 
 - [x] Add Bootstrap Icons (MIT) as vector geometries in `AppIcons`
 - [x] Replace emoji in mod type config with icon keys (`bike`, `track`, `tyre`, `rider`, `misc`)
+- [x] Swap Bikes to the UIX solid motocross bike and Tracks to the UIX motocross track
 - [x] Backwards-compatible aliases for old emoji config values
 - [x] Icons in the main tabs and empty states
 - [x] Icons in the "Select mod type" install dialog

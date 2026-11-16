@@ -85,6 +85,9 @@ public sealed partial class ModTypeViewModel : ObservableObject
     private bool _hideDisabled;
 
     [ObservableProperty]
+    private bool _smoothScrolling = true;
+
+    [ObservableProperty]
     private bool _isScanning;
 
     [ObservableProperty]

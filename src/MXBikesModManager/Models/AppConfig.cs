@@ -88,6 +88,9 @@ public sealed class UiConfig
     public bool HideDisabledByDefault { get; set; }
     public bool RememberWindow { get; set; } = true;
 
+    /// <summary>Eased wheel scrolling in the mod grid.</summary>
+    public bool SmoothScrolling { get; set; } = true;
+
     /// <summary>Dark palette key, see <c>ThemeService.Palettes</c>.</summary>
     public string Theme { get; set; } = "ember";
 }
