@@ -10,7 +10,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Remove the now-unused UIX paths and credits
 - [x] Build + 108 tests pass
 - [ ] User visual check in the tab bar
-- [ ] Commit and rebuild the AppImage
+- [x] Commit (`eb358eb`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `d271e53dc13c331725baa4c327391c6925c59e357a3023d3598f95336cbb9b10`
 
 ## Cleanup pass (done)
 
