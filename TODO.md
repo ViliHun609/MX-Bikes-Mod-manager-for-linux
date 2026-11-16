@@ -11,8 +11,9 @@ Status of the current batch of work. Update the checkboxes as things change.
       `PathText`, `ShortName`, `WithMetadata`, `IsScanning`)
 - [x] Remove unused usings and run `dotnet format` / analyzer checks
 - [x] Config regression test for removed/computed keys (108 tests total)
-- [ ] Commit the cleanup
-- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Commit the cleanup (`226e924`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `9e002f61a1a8374f83d648ca6c35fe440a1294efb313a1da30991f4375369acb`
 - [ ] Delete `build/`, `bin/` and `obj/` generated files from the working tree
 
 ## Current: source-to-Trash + nested packaging
