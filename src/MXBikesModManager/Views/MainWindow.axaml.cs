@@ -13,6 +13,7 @@ public partial class MainWindow : Window, IUiInteraction
 {
     private readonly ConfigService _config;
     private readonly MainWindowViewModel _viewModel;
+    private bool _dragLogged;
 
     public MainWindow() : this(ConfigService.Load(null)) { }
 
@@ -24,7 +25,11 @@ public partial class MainWindow : Window, IUiInteraction
         _viewModel = new MainWindowViewModel(config, this, initialTab);
         DataContext = _viewModel;
 
+        // Belt and braces: the XAML also sets DragDrop.AllowDrop on the window.
+        DragDrop.SetAllowDrop(this, true);
+
         const RoutingStrategies routes = RoutingStrategies.Tunnel | RoutingStrategies.Bubble;
+        AddHandler(DragDrop.DragEnterEvent, OnDragEnter, routes, handledEventsToo: true);
         AddHandler(DragDrop.DragOverEvent, OnDragOver, routes, handledEventsToo: true);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave, routes, handledEventsToo: true);
         AddHandler(DragDrop.DropEvent, OnDrop, routes, handledEventsToo: true);
@@ -45,25 +50,52 @@ public partial class MainWindow : Window, IUiInteraction
         };
     }
 
-    private void OnDragOver(object? sender, DragEventArgs e)
+    private void OnDragEnter(object? sender, DragEventArgs e)
     {
-        var hasFiles = e.DataTransfer.Contains(DataFormat.File);
+        _dragLogged = false;
+        HandleDrag(e, "enter");
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e) => HandleDrag(e, "over");
+
+    private void HandleDrag(DragEventArgs e, string phase)
+    {
+        var files = e.DataTransfer.TryGetFiles()?.ToList();
+        var hasFiles = files is { Count: > 0 };
+
         e.DragEffects = hasFiles ? DragDropEffects.Copy : DragDropEffects.None;
         DropOverlay.IsVisible = hasFiles;
         e.Handled = true;
+
+        if (_dragLogged) return;
+        _dragLogged = true;
+
+        var formats = e.DataTransfer.Formats.Select(format => format.ToString());
+        _config.Log.Info(
+            $"Drag {phase}: files={files?.Count ?? 0}, formats=[{string.Join(", ", formats)}]");
     }
 
     private void OnDragLeave(object? sender, DragEventArgs e)
     {
+        _dragLogged = false;
         DropOverlay.IsVisible = false;
+        _config.Log.Info("Drag leave.");
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
         DropOverlay.IsVisible = false;
+        _dragLogged = false;
+        e.Handled = true;
 
-        var files = e.DataTransfer.TryGetFiles();
-        if (files is null) return;
+        var files = e.DataTransfer.TryGetFiles()?.ToList();
+        if (files is null || files.Count == 0)
+        {
+            var formats = e.DataTransfer.Formats.Select(format => format.ToString());
+            _config.Log.Warn($"Drop ignored: no file data. Formats=[{string.Join(", ", formats)}]");
+            _viewModel.Status = "That drop did not contain local files. Drag files or folders from your file manager.";
+            return;
+        }
 
         var paths = files
             .Select(f => f.TryGetLocalPath())
@@ -71,11 +103,23 @@ public partial class MainWindow : Window, IUiInteraction
             .Select(p => p!)
             .ToList();
 
-        e.Handled = true;
+        _config.Log.Info(
+            $"Drop: {files.Count} item(s), {paths.Count} local path(s): {string.Join(" | ", paths)}");
 
-        if (paths.Count > 0)
+        if (paths.Count == 0)
+        {
+            _viewModel.Status = "That drop did not contain local files. Drag files or folders from your file manager.";
+            return;
+        }
+
+        try
         {
             await _viewModel.InstallPathsAsync(paths);
+        }
+        catch (Exception ex)
+        {
+            _config.Log.Error("Drop install failed", ex);
+            _viewModel.Status = $"Drop install failed: {ex.Message}";
         }
     }
 

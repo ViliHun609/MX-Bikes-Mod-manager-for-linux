@@ -2,7 +2,21 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Themes
+## Current: motocross icons + drag & drop
+
+- [x] Replace the Bikes icon with the UIX solid motocross bike (MIT)
+- [x] Replace the Tracks icon with the UIX solid motocross track (MIT)
+- [x] Keep icon keys (`bike`, `track`) and all old emoji aliases working
+- [x] Add a `DragEnter` handler alongside DragOver / DragLeave / Drop
+- [x] Detect drops with `TryGetFiles()` instead of only `Contains(DataFormat.File)`
+- [x] Call `DragDrop.SetAllowDrop` in code as well as XAML
+- [x] Log drag formats, item counts and resolved paths to `data/logs/app.log`
+- [x] Report non-local drops and catch install errors in the status bar
+- [ ] User performs one real drag (then we read the log)
+- [ ] Commit this batch
+- [ ] Rebuild the AppImage and record the new SHA-256
+
+## Themes (done)
 
 - [x] `ThemeService` with five dark palettes (Ember, Midnight, Forest, Violet, Mono)
 - [x] Persist the choice as `ui.theme` in `appsettings.json`
@@ -12,10 +26,10 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Cancel / window close restores the previous theme; Save persists
 - [x] Move all hardcoded view colours to theme resources
 - [x] Unit tests for palettes, fallback, config round-trip
-- [x] Verify the theme engine + cards visually (Midnight/Violet); no further GUI runs per request
+- [x] Verify the theme engine + cards visually (Midnight/Violet)
 - [x] Commit the theme work (`5709daa`)
 
-## Icons
+## Icons (done, minus the motocross swap above)
 
 - [x] Add Bootstrap Icons (MIT) as vector geometries in `AppIcons`
 - [x] Replace emoji in mod type config with icon keys (`bike`, `track`, `tyre`, `rider`, `misc`)
@@ -28,17 +42,17 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Verify icons visually in the tabs and theme cards
 - [x] Commit the icon work (`5709daa`)
 
-## Release
+## Previous release
 
 - [x] Run the full test suite (76 passing)
 - [x] Rebuild `dist/MXBikesModManager-x86_64.AppImage`
-- [x] Record the new SHA-256: `5345b5636923826ea8dddaffb3e72bef303273d18e7cd0b649331f8476bc7848`
+- [x] Record SHA-256: `5345b5636923826ea8dddaffb3e72bef303273d18e7cd0b649331f8476bc7848`
 - [x] Update README (themes + icons + test count)
 - [x] Smoke-test the AppImage with `--scan` and `--help`
 
 ## Known leftovers / notes
 
-- The live drag-and-drop test from the previous batch is still only unit-tested.
-- The final look of all five themes should be eyeballed once by the user; the engine was
-  verified with Midnight/Violet screenshots before GUI testing was stopped.
+- Drag & drop still needs one real file-manager test; the log now records enough to
+  diagnose a failure.
+- The final look of all five themes should be eyeballed once by the user.
 - `dist/` is git-ignored; the AppImage is produced by `./scripts/build-appimage.sh`.
