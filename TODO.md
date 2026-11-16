@@ -7,13 +7,14 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Trace the user-supplied dirt-bike reference into a right-facing vector silhouette
       (clean wheels/spokes, forks, fenders; no rider)
 - [x] Keep the Font Awesome checkered flag for Tracks
+- [x] Replace the recording-like tyre glyph with the treaded Phosphor tire
 - [x] Tab icons at 17 px
-- [x] Accurate credits (Bootstrap MIT, Font Awesome CC BY, custom bike silhouette)
+- [x] Accurate credits (Bootstrap/Phosphor MIT, Font Awesome CC BY, custom bike silhouette)
 - [x] Build + 108 tests pass
 - [ ] User visual check in the tab bar
-- [x] Commit (`599f986`)
+- [x] Commits (`599f986`, tyre `de3a920`)
 - [x] AppImage SHA-256:
-      `d78fdcc555bede9187c54c52ebabf7c832fc553dd203e358296045b9ab646ca2`
+      `bba13296519116f6c8148e6d66c7e0b17eda9d8e4ae60458a181942bf8a3b64a`
 
 ## Cleanup pass (done)
 
