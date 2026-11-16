@@ -11,7 +11,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Keep MIT / CC BY credits accurate (Bootstrap, UIX, Font Awesome)
 - [x] Build + 108 tests pass
 - [ ] User visual check in the tab bar
-- [ ] Commit and rebuild the AppImage
+- [x] Commit (`7675ef2`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `ebe5f5aa76fc57b87467dcf4fbcbe7ffbff21868e352da582475a84637ea0b08`
 
 ## Cleanup pass (done)
 
