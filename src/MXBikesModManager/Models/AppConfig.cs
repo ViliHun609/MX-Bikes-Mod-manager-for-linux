@@ -91,6 +91,9 @@ public sealed class UiConfig
     /// <summary>Eased wheel scrolling in the mod grid.</summary>
     public bool SmoothScrolling { get; set; } = true;
 
+    /// <summary>Default for the install dialog's "move source to Trash" checkbox.</summary>
+    public bool TrashSourceAfterInstall { get; set; } = true;
+
     /// <summary>Dark palette key, see <c>ThemeService.Palettes</c>.</summary>
     public string Theme { get; set; } = "ember";
 }

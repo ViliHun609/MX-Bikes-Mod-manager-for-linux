@@ -23,12 +23,15 @@ public partial class InstallTargetWindow : Window
     public InstallTargetWindow(
         InstallPlan plan,
         IEnumerable<ModTypeConfig> types,
-        IReadOnlyList<string>? paintBikes = null) : this()
+        IReadOnlyList<string>? paintBikes = null,
+        bool trashSourceDefault = true) : this()
     {
         _plan = plan;
         _types.AddRange(types);
         _bikeType = _types.FirstOrDefault(t => string.Equals(t.Key, "bikes", StringComparison.OrdinalIgnoreCase));
         _paintBikes = paintBikes ?? Array.Empty<string>();
+
+        TrashSourceCheck.IsChecked = trashSourceDefault;
 
         FileText.Text = Path.GetFileName(plan.SourcePath);
         KindText.Text = plan.IsBikePaint
@@ -140,13 +143,34 @@ public partial class InstallTargetWindow : Window
         }
 
         var subfolders = isPaint ? new List<string>() : GetSubfolders(type);
+
+        if (!isPaint &&
+            _plan is { HasGameLayout: true, LayoutSubfolder: { } layoutSubfolder } &&
+            string.Equals(type.Key, _plan.LayoutTypeKey, StringComparison.OrdinalIgnoreCase) &&
+            !subfolders.Contains(layoutSubfolder, StringComparer.OrdinalIgnoreCase))
+        {
+            subfolders.Add(layoutSubfolder);
+        }
+
         SubfolderPanel.IsVisible = subfolders.Count > 0;
 
         if (!isPaint && subfolders.Count > 0)
         {
             SubfolderBox.ItemsSource = subfolders;
-            var suggested = _plan is null ? null : InstallService.SuggestSubfolder(_plan.SourcePath, type);
-            SubfolderBox.Text = suggested ?? type.InstallSubfolder;
+
+            var sameLayoutType = _plan is { HasGameLayout: true } &&
+                                 string.Equals(type.Key, _plan.LayoutTypeKey, StringComparison.OrdinalIgnoreCase);
+
+            if (sameLayoutType)
+            {
+                // Preserve the packaging exactly unless the user types another subfolder.
+                SubfolderBox.Text = _plan!.LayoutSubfolder ?? string.Empty;
+            }
+            else
+            {
+                var suggested = _plan is null ? null : InstallService.SuggestSubfolder(_plan.SourcePath, type);
+                SubfolderBox.Text = suggested ?? type.InstallSubfolder;
+            }
         }
         else if (!isPaint)
         {
@@ -209,6 +233,10 @@ public partial class InstallTargetWindow : Window
             var name = Path.GetFileName(_plan.SourcePath.TrimEnd(Path.DirectorySeparatorChar));
             TargetText.Text = $"Target: {root}/{name}";
         }
+        else if (_plan.IsLayoutFolder)
+        {
+            TargetText.Text = $"Target: {root}/  (folder contents)";
+        }
         else
         {
             TargetText.Text = $"Target: {root}/  (archive contents)";
@@ -253,7 +281,7 @@ public partial class InstallTargetWindow : Window
                 return;
             }
 
-            Close(new InstallChoice(_bikeType, null, bike));
+            Close(new InstallChoice(_bikeType, null, bike, TrashSourceCheck.IsChecked == true));
             return;
         }
 
@@ -266,7 +294,7 @@ public partial class InstallTargetWindow : Window
             return;
         }
 
-        Close(new InstallChoice(type, subfolder));
+        Close(new InstallChoice(type, subfolder, null, TrashSourceCheck.IsChecked == true));
     }
 
     private void OnCancel(object? sender, RoutedEventArgs e) => Close(null);

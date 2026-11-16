@@ -53,6 +53,10 @@
       <TextBlock Text="Pick boots, helmets, protections… or type a custom folder." Classes="muted" FontSize="11" />
     </StackPanel>
 
+    <CheckBox x:Name="TrashSourceCheck"
+              Content="Move the downloaded file to the system Trash after installing"
+              Margin="0,2,0,0" />
+
     <Border Background="{DynamicResource TargetBg}" BorderBrush="{DynamicResource TargetBorder}" BorderThickness="1" CornerRadius="6" Padding="10,7">
       <TextBlock x:Name="TargetText" Classes="muted" FontSize="12" TextWrapping="Wrap" />
     </Border>

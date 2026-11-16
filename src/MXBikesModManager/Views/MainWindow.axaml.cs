@@ -177,7 +177,11 @@ public partial class MainWindow : Window, IUiInteraction
 
     public async Task<InstallChoice?> PickInstallTypeAsync(InstallPlan plan, IReadOnlyList<string> paintBikes)
     {
-        var window = new InstallTargetWindow(plan, _config.Config.ModTypes, paintBikes);
+        var window = new InstallTargetWindow(
+            plan,
+            _config.Config.ModTypes,
+            paintBikes,
+            _config.Config.Ui.TrashSourceAfterInstall);
         return await window.ShowDialog<InstallChoice?>(this);
     }
 

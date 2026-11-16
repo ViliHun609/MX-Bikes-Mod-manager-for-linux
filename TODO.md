@@ -2,19 +2,36 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Current: smooth scrolling
+## Current: source-to-Trash + nested packaging
+
+- [x] Install dialog checkbox “Move the downloaded file to the system Trash” (checked by default)
+- [x] Settings default checkbox + `ui.trashSourceAfterInstall`
+- [x] `SystemTrashService` using `gio trash`, `trash-put` fallback, success/failure result
+- [x] Trash only after a successful install; cancel/failure keeps the source
+- [x] Guards: mods root, app data/config, home, filesystem roots, folders containing app data
+- [x] Detect wrappers several levels deep (`mods/…`, `MX Bikes/mods/…`, custom pack folder)
+- [x] Detect/retain type subfolders (`riders`, `boots`, `Mods`, …) and collapse duplicates
+- [x] Retargeting to another type/subfolder strips the old one (no `boots/riders/…`)
+- [x] Dropped folders with a nested game layout install per-file into the right place
+- [x] Normal dropped folders still copy as one folder (regression test)
+- [x] Tests for all variants + trash guards (104 total)
+- [x] README + config docs
+- [ ] User checks a real nested pack, a folder drop, and the Trash toggle
+- [ ] Commit this batch
+- [ ] Rebuild the AppImage and record the new SHA-256
+
+## Smooth scrolling (done)
 
 - [x] `SmoothScroll` attached behaviour for `ScrollViewer` (eased wheel animation)
 - [x] Clamp to the scrollable range, Shift+wheel horizontal support
 - [x] Cancel immediately on mouse press / scrollbar drag
 - [x] Enable native touch/touchpad inertia on the grid
 - [x] `ui.smoothScrolling` setting + Settings checkbox (default on, applies live)
-- [x] Unit tests for the scroll maths and config default (86 total)
+- [x] Unit tests for the scroll maths and config default
 - [x] README + config docs
 - [ ] User checks the feel (tune ease/time if needed)
-- [x] Commit this batch (`cd7f1a3`)
-- [x] Rebuild the AppImage and record the new SHA-256:
-      `7b0bc69642205ce64b5c452df2bf8259571c5d6898828fe5e058b0ff83824aab`
+- [x] Commit (`cd7f1a3`)
+- [x] AppImage SHA-256: `7b0bc69642205ce64b5c452df2bf8259571c5d6898828fe5e058b0ff83824aab`
 - [x] Decided against extra blur effects for now
 
 ## Drag & drop / Avalonia 12 (done)

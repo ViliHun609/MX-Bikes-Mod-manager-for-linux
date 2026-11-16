@@ -4,7 +4,11 @@ using MXBikesModManager.Services;
 namespace MXBikesModManager.ViewModels;
 
 /// <summary>Install destination chosen in the dialog. <see cref="PaintBike"/> is set for bike paint jobs.</summary>
-public sealed record InstallChoice(ModTypeConfig Type, string? Subfolder, string? PaintBike = null);
+public sealed record InstallChoice(
+    ModTypeConfig Type,
+    string? Subfolder,
+    string? PaintBike = null,
+    bool TrashSource = false);
 
 /// <summary>Everything the view model needs from the window: pickers and dialogs.</summary>
 public interface IUiInteraction

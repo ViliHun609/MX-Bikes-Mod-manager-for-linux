@@ -37,6 +37,74 @@ public class MainWindowViewModelTests
         public Task<bool> ShowSettingsAsync(ConfigService config) => Task.FromResult(false);
     }
 
+    private sealed class FakeTrashService : ITrashService
+    {
+        public List<string> Paths { get; } = new();
+
+        public Task<TrashResult> TrashAsync(string path)
+        {
+            Paths.Add(path);
+            return Task.FromResult(new TrashResult(true, "Moved to Trash."));
+        }
+    }
+
+    [Fact]
+    public async Task Successful_install_moves_the_source_to_trash_when_checked()
+    {
+        using var env = new TestEnvironment();
+        var pkz = env.Touch("downloads/Fox Instinct.pkz", "boot-payload");
+        var trash = new FakeTrashService();
+
+        var ui = new FakeUi
+        {
+            Choice = new InstallChoice(env.Type("rider"), "boots", TrashSource: true)
+        };
+        var vm = new MainWindowViewModel(env.Config, ui, "rider", trash);
+        vm.Initialize();
+
+        await vm.InstallPathsAsync(new[] { pkz });
+
+        Assert.Equal(new[] { pkz }, trash.Paths);
+        Assert.True(File.Exists(Path.Combine(env.ModsRoot, "rider", "boots", "Fox Instinct.pkz")));
+    }
+
+    [Fact]
+    public async Task Unchecked_install_keeps_the_source()
+    {
+        using var env = new TestEnvironment();
+        var pkz = env.Touch("downloads/Fox Instinct.pkz", "boot-payload");
+        var trash = new FakeTrashService();
+
+        var ui = new FakeUi
+        {
+            Choice = new InstallChoice(env.Type("rider"), "boots", TrashSource: false)
+        };
+        var vm = new MainWindowViewModel(env.Config, ui, "rider", trash);
+        vm.Initialize();
+
+        await vm.InstallPathsAsync(new[] { pkz });
+
+        Assert.Empty(trash.Paths);
+        Assert.True(File.Exists(pkz));
+    }
+
+    [Fact]
+    public async Task Cancelling_the_dialog_never_trashes_the_source()
+    {
+        using var env = new TestEnvironment();
+        var pkz = env.Touch("downloads/Fox Instinct.pkz", "boot-payload");
+        var trash = new FakeTrashService();
+
+        var ui = new FakeUi { Choice = null };
+        var vm = new MainWindowViewModel(env.Config, ui, "rider", trash);
+        vm.Initialize();
+
+        await vm.InstallPathsAsync(new[] { pkz });
+
+        Assert.Empty(trash.Paths);
+        Assert.True(File.Exists(pkz));
+    }
+
     [Fact]
     public async Task Dropping_a_paint_asks_for_a_bike_and_installs_into_its_paints_folder()
     {

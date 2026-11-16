@@ -28,6 +28,15 @@ instantly by renaming them in place.
   confirmation dialog showing what was detected, the target path, and the type and
   subfolder — so boots go to `rider/boots`, helmets to `rider/helmets`, etc. Bare `.pkz`
   files are obfuscated, so the type is guessed from the file name and always confirmed.
+- **Nested packaging normalisation** — game-layout packs wrapped several folders deep
+  (`mods/rider/riders/…`, `MX Bikes/mods/rider/…`, `DownloadPack/mods/rider/…`) are
+  detected for archives *and* dropped folders. Repeated `rider/rider` or `riders/riders`
+  segments are collapsed, and changing the subfolder in the dialog retargets the tree
+  without duplicating it.
+- **Move source to Trash** — the install dialog has a checked “Move the downloaded file to
+  the system Trash after installing” toggle (default controlled in Settings). Only
+  successful installs are trashed; cancel/failure keeps the source. Uses `gio trash`
+  (`trash-put` fallback), so it appears in the normal desktop trash and can be restored.
 - **Bike paint jobs** — drop a `.pnt` file or a paint pack and the app detects it, asks
   which bike it belongs to (with a searchable bike picker, pre-filled when the bike name
   is in the file name) and installs it to `bikes/<bike>/paints/`. If the detection is
@@ -78,10 +87,11 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-86 tests cover scanning/pairing, name-based categories, toggling, installs (including
-zip-slip attempts, type/subfolder suggestions and confirmation, paint targeting and
-backups), themes and icon resolution, smooth-scroll maths, TGA decoding (uncompressed +
-RLE), PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix detection.
+104 tests cover scanning/pairing, name-based categories, toggling, installs (including
+zip-slip attempts, nested game layouts in archives and folders, type/subfolder
+suggestions and confirmation, paint targeting and backups), system-trash guards, themes
+and icon resolution, smooth-scroll maths, TGA decoding (uncompressed + RLE), PiBoSo INI
+metadata, the metadata cache, and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
@@ -121,6 +131,7 @@ repo root. The file is created automatically if it is missing.
     "showPreviews": true,
     "hideDisabledByDefault": false,
     "smoothScrolling": true,
+    "trashSourceAfterInstall": true,
     "theme": "ember"
   }
 }
@@ -129,6 +140,8 @@ repo root. The file is created automatically if it is missing.
 - `ui.theme` — one of `ember`, `midnight`, `forest`, `violet`, `mono`. Unknown values fall
   back to `ember`.
 - `ui.smoothScrolling` — eased mouse-wheel scrolling in the mod grid (default `true`).
+- `ui.trashSourceAfterInstall` — default state of the install dialog’s “move source to
+  Trash” checkbox (default `true`).
 
 - `modsRoot` — the game's mods folder inside the Proton prefix. Auto-detected when empty.
 - `data.root` — relative paths resolve against the config file's folder, keeping

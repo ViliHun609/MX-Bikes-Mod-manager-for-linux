@@ -18,10 +18,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly ThumbnailService _thumbs;
     private readonly MetadataCache _cache;
     private readonly LogService _log;
+    private readonly ITrashService _trash;
     private readonly SemaphoreSlim _previewGate = new(4);
     private CancellationTokenSource? _scanCts;
 
-    public MainWindowViewModel(ConfigService config, IUiInteraction interaction, string? initialTab = null)
+    public MainWindowViewModel(
+        ConfigService config,
+        IUiInteraction interaction,
+        string? initialTab = null,
+        ITrashService? trash = null)
     {
         _config = config;
         _log = config.Log;
@@ -30,6 +35,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _toggle = new ToggleService(config);
         _installer = new InstallService(config);
         _thumbs = new ThumbnailService(_log);
+        _trash = trash ?? new SystemTrashService(config);
         Interaction = interaction;
 
         _modsRoot = config.Config.Game.ModsRoot;
@@ -284,11 +290,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
             }
             else
             {
+                var sameSubfolder =
+                    string.IsNullOrWhiteSpace(choice.Subfolder) ||
+                    string.Equals(choice.Subfolder, plan.LayoutSubfolder, StringComparison.OrdinalIgnoreCase);
+
                 var keepDetectedLayout =
                     plan.HasGameLayout &&
                     plan.Type is not null &&
                     string.Equals(plan.Type.Key, choice.Type.Key, StringComparison.OrdinalIgnoreCase) &&
-                    string.IsNullOrWhiteSpace(choice.Subfolder);
+                    sameSubfolder;
 
                 if (!keepDetectedLayout)
                 {
@@ -314,6 +324,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
             if (!result.Success && result.Errors.Count > 0)
             {
                 await Interaction.ShowMessageAsync("Install problems", string.Join(Environment.NewLine, result.Errors.Take(12)));
+            }
+            else if (result.Success && choice.TrashSource)
+            {
+                var trashed = await _trash.TrashAsync(path);
+                Status = trashed.Success
+                    ? $"{result.Message} Moved the source to the system Trash."
+                    : $"{result.Message} {trashed.Message}";
             }
         }
 

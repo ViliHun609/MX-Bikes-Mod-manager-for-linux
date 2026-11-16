@@ -9,6 +9,10 @@ public sealed class PlannedFile
 {
     /// <summary>Entry key as stored in the archive (used to match while extracting).</summary>
     public required string EntryKey { get; init; }
+
+    /// <summary>Absolute source path for folder-layout installs; null for archive entries.</summary>
+    public string? SourcePath { get; init; }
+
     public required string DestinationPath { get; init; }
 }
 
@@ -16,6 +20,9 @@ public sealed class ArchiveEntry
 {
     public required string RawKey { get; init; }
     public required string RelativeKey { get; init; }
+
+    /// <summary>Absolute source path for folder-layout plans; null for archive entries.</summary>
+    public string? SourcePath { get; init; }
 }
 
 public sealed class InstallPlan
@@ -25,6 +32,9 @@ public sealed class InstallPlan
     public bool NeedsTypeChoice { get; set; }
     public bool IsDirectCopy { get; set; }
     public bool IsFolderCopy { get; set; }
+
+    /// <summary>True when a dropped folder already contains a game mods/&lt;type&gt;/... tree.</summary>
+    public bool IsLayoutFolder { get; set; }
 
     /// <summary>True when the dropped file looks like one or more bike paint jobs (.pnt).</summary>
     public bool IsBikePaint { get; set; }
@@ -38,7 +48,9 @@ public sealed class InstallPlan
     /// <summary>True when the archive already uses the game's mods/&lt;type&gt;/... layout.</summary>
     public bool HasGameLayout { get; set; }
     public string? LayoutTypeKey { get; set; }
-    public string? LayoutFolder { get; set; }
+
+    /// <summary>Known subfolder found after the type, e.g. "riders" or "Mods".</summary>
+    public string? LayoutSubfolder { get; set; }
 
     public string DetectedKind { get; set; } = string.Empty;
     public List<ArchiveEntry> Entries { get; } = new();
@@ -98,6 +110,20 @@ public sealed class InstallService
 
         if (Directory.Exists(sourcePath))
         {
+            // Sample first so a huge normal folder does not get fully walked just to detect
+            // packaging. If a layout is found, re-enumerate everything before planning.
+            var folderSample = EnumerateFolderKeys(sourcePath, limit: 500);
+            var folderLayout = DetectLayout(folderSample);
+            if (folderLayout is not null)
+            {
+                var folderKeys = EnumerateFolderKeys(sourcePath);
+                if (IsLayoutDominant(folderKeys, folderLayout.Prefix))
+                {
+                    ApplyLayout(plan, folderLayout, sourcePath, folderKeys, isFolder: true);
+                    return plan;
+                }
+            }
+
             plan.IsFolderCopy = true;
             plan.IsDirectCopy = true;
             plan.DetectedKind = "folder";
@@ -161,53 +187,33 @@ public sealed class InstallService
             return plan;
         }
 
-        plan.Entries.AddRange(MapEntries(rawKeys));
-        var relativeKeys = plan.Entries.Select(e => e.RelativeKey).ToList();
+        // Loose-file detection needs the wrapper-stripped names, but the layout detector
+        // deliberately looks at the original keys so it can see "mods/rider/riders/...".
+        var mapped = MapEntries(rawKeys);
+        var relativeKeys = mapped.Select(e => e.RelativeKey).ToList();
         plan.DetectedKind = DescribeContent(relativeKeys);
 
         // Paint packs are .pnt files without a .pkz (often wrapped in a paints/ folder).
         // They need a bike choice rather than a type folder, so handle them before layout detection.
         if (LooksLikeBikePaint(relativeKeys))
         {
+            plan.Entries.AddRange(mapped);
             plan.IsBikePaint = true;
             plan.NeedsTypeChoice = true;
             plan.DetectedKind = "bike paint (.pnt)";
             return plan;
         }
 
-        // Case 1: the archive is already laid out like the game's mods folder (bikes/..., tracks/...),
-        // optionally wrapped in a "mods" or "MX Bikes" folder.
-        var firstSegments = relativeKeys
-            .Select(k => k.Split('/')[0])
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        if (firstSegments.Count == 1 && TryGetType(firstSegments[0], out var layoutType))
+        // Case 1: the archive already contains a game layout, possibly wrapped several levels
+        // deep (mods/rider/riders/..., MX Bikes/mods/rider/..., DownloadPack/mods/rider/...).
+        var layout = DetectLayout(rawKeys);
+        if (layout is not null)
         {
-            plan.Type = layoutType;
-            plan.DetectedTypeKey = layoutType.Key;
-            plan.HasGameLayout = true;
-            plan.LayoutTypeKey = layoutType.Key;
-            plan.LayoutFolder = layoutType.Folder;
-            plan.NeedsTypeChoice = false;
-            foreach (var entry in plan.Entries)
-            {
-                if (HasTraversal(entry.RelativeKey))
-                {
-                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
-                    continue;
-                }
-                var destination = Path.Combine(ModsRoot, entry.RelativeKey.Replace('/', Path.DirectorySeparatorChar));
-                if (!IsInsideModsRoot(destination))
-                {
-                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
-                    continue;
-                }
-                plan.Files.Add(new PlannedFile { EntryKey = entry.RawKey, DestinationPath = destination });
-            }
-            CountOverwrites(plan);
+            ApplyLayout(plan, layout, sourcePath, rawKeys, isFolder: false);
             return plan;
         }
+
+        plan.Entries.AddRange(mapped);
 
         var detected = DetectTypeKey(relativeKeys);
         var hint = SuggestTypeKey(sourcePath, preferredTypeKey);
@@ -235,33 +241,9 @@ public sealed class InstallService
 
         var typeRoot = GetTypeRoot(type, preferredSubfolder);
 
-        if (plan.HasGameLayout && plan.LayoutFolder is not null)
+        if (plan.HasGameLayout)
         {
-            // The archive already contains <type>/...; strip that prefix and re-target it.
-            foreach (var entry in plan.Entries)
-            {
-                if (HasTraversal(entry.RelativeKey))
-                {
-                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
-                    continue;
-                }
-
-                var relative = entry.RelativeKey;
-                if (relative.StartsWith(plan.LayoutFolder + "/", StringComparison.OrdinalIgnoreCase))
-                {
-                    relative = relative[(plan.LayoutFolder.Length + 1)..];
-                }
-
-                var destination = Path.Combine(typeRoot, relative.Replace('/', Path.DirectorySeparatorChar));
-                if (!IsInsideModsRoot(destination))
-                {
-                    plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
-                    continue;
-                }
-                plan.Files.Add(new PlannedFile { EntryKey = entry.RawKey, DestinationPath = destination });
-            }
-
-            CountOverwrites(plan);
+            BuildLayoutFiles(plan, type, preferredSubfolder);
             return;
         }
 
@@ -588,6 +570,11 @@ public sealed class InstallService
 
         try
         {
+            if (plan.IsLayoutFolder)
+            {
+                return await Task.Run(() => InstallFolderLayout(plan, progress, ct), ct);
+            }
+
             return plan.IsDirectCopy
                 ? await Task.Run(() => InstallSingle(plan, progress, ct), ct)
                 : await Task.Run(() => InstallArchive(plan, progress, ct), ct);
@@ -632,6 +619,55 @@ public sealed class InstallService
             Message = $"Installed “{plan.SourceName}” into {plan.TargetLabel}.",
             InstalledFiles = 1,
             BackedUp = backups
+        };
+    }
+
+    private InstallResult InstallFolderLayout(InstallPlan plan, IProgress<InstallProgress>? progress, CancellationToken ct)
+    {
+        var total = plan.Files.Count;
+        var done = 0;
+        var backups = 0;
+        var errors = new List<string>();
+
+        foreach (var planned in plan.Files)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var source = planned.SourcePath;
+            if (string.IsNullOrWhiteSpace(source) || !File.Exists(source))
+            {
+                errors.Add($"{planned.EntryKey}: source file is missing");
+                continue;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(planned.DestinationPath)!);
+                if (File.Exists(planned.DestinationPath)) backups += Backup(planned.DestinationPath);
+
+                File.Copy(source, planned.DestinationPath, overwrite: true);
+                done++;
+                progress?.Report(new InstallProgress(done, total, planned.EntryKey));
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Failed to install {planned.EntryKey}", ex);
+                errors.Add($"{planned.EntryKey}: {ex.Message}");
+            }
+        }
+
+        var success = errors.Count == 0 && done > 0;
+        _log.Info($"Installed folder layout {plan.SourceName}: {done}/{total} files, {backups} backed up");
+
+        return new InstallResult
+        {
+            Success = success,
+            Message = success
+                ? $"Installed “{plan.SourceName}” into {plan.TargetLabel} ({done} files)."
+                : $"Install finished with problems ({done}/{total} files).",
+            InstalledFiles = done,
+            BackedUp = backups,
+            Errors = errors
         };
     }
 
@@ -733,13 +769,6 @@ public sealed class InstallService
             string.Equals(t.Folder, key, StringComparison.OrdinalIgnoreCase));
     }
 
-    private bool TryGetType(string folderOrKey, out ModTypeConfig type)
-    {
-        var found = ResolveType(folderOrKey);
-        type = found!;
-        return found is not null;
-    }
-
     private static string? DetectTypeKey(IEnumerable<string> keys)
     {
         var extensions = keys
@@ -765,17 +794,293 @@ public sealed class InstallService
         return extensions.Count == 0 ? "unknown archive" : "contains " + string.Join(", ", extensions);
     }
 
+    private sealed record LayoutMatch(ModTypeConfig Type, string Prefix, string? Subfolder);
+
+    /// <summary>
+    /// Finds a game-layout tree anywhere near the root: mods/rider/..., MX Bikes/mods/rider/...,
+    /// DownloadPack/mods/rider/..., or rider/.... Root-level stray files are ignored.
+    /// </summary>
+    private LayoutMatch? DetectLayout(IReadOnlyList<string> keys)
+    {
+        if (keys.Count == 0) return null;
+
+        var candidates = new Dictionary<string, (ModTypeConfig Type, int Index, int Matches)>(
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var key in keys)
+        {
+            var segments = key.Split('/');
+            for (var i = 0; i < segments.Length - 1 && i <= 3; i++)
+            {
+                var type = ResolveType(segments[i]);
+                if (type is null) continue;
+
+                var prefixSegments = segments.Take(i + 1).ToArray();
+                var prefix = string.Join('/', prefixSegments);
+
+                var matches = 0;
+                var conflict = false;
+
+                foreach (var other in keys)
+                {
+                    var otherSegments = other.Split('/');
+                    if (otherSegments.Length <= i + 1) continue;
+
+                    if (!otherSegments.Take(i + 1).SequenceEqual(prefixSegments, StringComparer.OrdinalIgnoreCase))
+                    {
+                        conflict = true;
+                        break;
+                    }
+
+                    matches++;
+                }
+
+                if (conflict || matches == 0) continue;
+
+                if (!candidates.TryGetValue(prefix, out var existing) || matches > existing.Matches)
+                {
+                    candidates[prefix] = (type, i, matches);
+                }
+            }
+        }
+
+        if (candidates.Count == 0) return null;
+
+        var best = candidates
+            .OrderByDescending(candidate => candidate.Value.Matches)
+            .ThenBy(candidate => candidate.Value.Index)
+            .First();
+
+        var subfolder = DetectLayoutSubfolder(keys, best.Key, best.Value.Type);
+        return new LayoutMatch(best.Value.Type, best.Key, subfolder);
+    }
+
+    private static string? DetectLayoutSubfolder(IReadOnlyList<string> keys, string prefix, ModTypeConfig type)
+    {
+        var known = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var subfolder in type.ScanSubfolders)
+        {
+            if (!string.IsNullOrWhiteSpace(subfolder)) known.Add(subfolder);
+        }
+        if (!string.IsNullOrWhiteSpace(type.InstallSubfolder)) known.Add(type.InstallSubfolder);
+        if (known.Count == 0) return null;
+
+        string? found = null;
+
+        foreach (var key in keys)
+        {
+            var rest = RelativeAfterPrefix(key, prefix);
+            if (rest is null) continue;
+
+            var slash = rest.IndexOf('/');
+            if (slash <= 0) return null;
+
+            var first = rest[..slash];
+            if (!known.Contains(first)) return null;
+
+            if (found is null) found = first;
+            else if (!string.Equals(found, first, StringComparison.OrdinalIgnoreCase)) return null;
+        }
+
+        return found;
+    }
+
+    private void ApplyLayout(
+        InstallPlan plan,
+        LayoutMatch layout,
+        string sourceRoot,
+        IReadOnlyList<string> keys,
+        bool isFolder)
+    {
+        plan.Type = layout.Type;
+        plan.DetectedTypeKey = layout.Type.Key;
+        plan.HasGameLayout = true;
+        plan.LayoutTypeKey = layout.Type.Key;
+        plan.LayoutSubfolder = layout.Subfolder;
+        plan.NeedsTypeChoice = false;
+        plan.IsLayoutFolder = isFolder;
+        plan.DetectedKind = isFolder
+            ? $"folder · game layout ({DescribeLayout(layout)})"
+            : $"game layout ({DescribeLayout(layout)})";
+
+        plan.Entries.Clear();
+
+        foreach (var key in keys)
+        {
+            var rest = RelativeAfterPrefix(key, layout.Prefix);
+            if (rest is null) continue;
+
+            var collapsed = CollapseLayoutRest(rest, layout.Type, layout.Subfolder);
+            if (collapsed.Length == 0) continue;
+
+            plan.Entries.Add(new ArchiveEntry
+            {
+                RawKey = isFolder ? rest : key,
+                RelativeKey = collapsed,
+                SourcePath = isFolder
+                    ? Path.Combine(sourceRoot, key.Replace('/', Path.DirectorySeparatorChar))
+                    : null
+            });
+        }
+
+        BuildLayoutFiles(plan, layout.Type, preferredSubfolder: null);
+    }
+
+    /// <summary>Builds final destinations for an already-normalised game-layout plan.</summary>
+    private void BuildLayoutFiles(InstallPlan plan, ModTypeConfig type, string? preferredSubfolder)
+    {
+        plan.Type = type;
+        plan.NeedsTypeChoice = false;
+        plan.Files.Clear();
+
+        var sameLayoutType = string.Equals(type.Key, plan.LayoutTypeKey, StringComparison.OrdinalIgnoreCase);
+
+        var subfolder = !string.IsNullOrWhiteSpace(preferredSubfolder)
+            ? preferredSubfolder.Trim()
+            : sameLayoutType
+                ? plan.LayoutSubfolder
+                : type.InstallSubfolder;
+
+        var typeRoot = Path.Combine(ModsRoot, type.Folder);
+        if (!string.IsNullOrWhiteSpace(subfolder))
+        {
+            typeRoot = Path.Combine(typeRoot, subfolder);
+        }
+
+        foreach (var entry in plan.Entries)
+        {
+            if (HasTraversal(entry.RelativeKey))
+            {
+                plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
+                continue;
+            }
+
+            var relative = entry.RelativeKey;
+            if (!string.IsNullOrWhiteSpace(plan.LayoutSubfolder) &&
+                relative.StartsWith(plan.LayoutSubfolder + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                relative = relative[(plan.LayoutSubfolder.Length + 1)..];
+            }
+
+            if (relative.Length == 0) continue;
+
+            var destination = Path.Combine(typeRoot, relative.Replace('/', Path.DirectorySeparatorChar));
+            if (!IsInsideModsRoot(destination))
+            {
+                plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
+                continue;
+            }
+
+            plan.Files.Add(new PlannedFile
+            {
+                EntryKey = entry.RawKey,
+                SourcePath = entry.SourcePath,
+                DestinationPath = destination
+            });
+        }
+
+        CountOverwrites(plan);
+    }
+
+    private string CollapseLayoutRest(string rest, ModTypeConfig type, string? subfolder)
+    {
+        var segments = rest.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        // mods/rider/rider/... → drop the repeated type folder.
+        while (segments.Count > 1)
+        {
+            var firstType = ResolveType(segments[0]);
+            if (firstType is null ||
+                !string.Equals(firstType.Key, type.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+            segments.RemoveAt(0);
+        }
+
+        // mods/rider/riders/riders/... → drop the repeated subfolder.
+        if (!string.IsNullOrWhiteSpace(subfolder))
+        {
+            while (segments.Count > 1 &&
+                   string.Equals(segments[0], subfolder, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(segments[1], subfolder, StringComparison.OrdinalIgnoreCase))
+            {
+                segments.RemoveAt(0);
+            }
+        }
+
+        return string.Join('/', segments);
+    }
+
+    private static bool IsLayoutDominant(IReadOnlyList<string> keys, string prefix)
+    {
+        var deepKeys = keys.Where(key => key.Contains('/')).ToList();
+        if (deepKeys.Count == 0) return false;
+
+        // Every deep file must belong to the detected tree; root-level stray files are ignored.
+        return deepKeys.All(key => RelativeAfterPrefix(key, prefix) is not null);
+    }
+
+    private static string? RelativeAfterPrefix(string key, string prefix)
+    {
+        if (!key.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase)) return null;
+        return key[(prefix.Length + 1)..];
+    }
+
+    private static string DescribeLayout(LayoutMatch layout) =>
+        string.IsNullOrWhiteSpace(layout.Subfolder)
+            ? layout.Type.Folder
+            : $"{layout.Type.Folder}/{layout.Subfolder}";
+
+    private static List<string> EnumerateFolderKeys(string root, int? limit = null)
+    {
+        var keys = new List<string>();
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.ReparsePoint
+        };
+
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", options))
+            {
+                var relative = Path.GetRelativePath(root, file);
+                if (relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                keys.Add(relative.Replace(Path.DirectorySeparatorChar, '/'));
+                if (limit is not null && keys.Count >= limit.Value) break;
+            }
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+
+        return keys;
+    }
+
     private List<ArchiveEntry> MapEntries(List<string> rawKeys)
     {
-        var wrapper = rawKeys[0].Split('/')[0];
-        var hasWrapper = WrapperNames.Any(w => string.Equals(w, wrapper, StringComparison.OrdinalIgnoreCase))
-                         && rawKeys.All(k => k.Contains('/'));
-
-        return rawKeys.Select(raw =>
+        return rawKeys.Select(raw => new ArchiveEntry
         {
-            var relative = hasWrapper ? raw[(wrapper.Length + 1)..] : raw;
-            return new ArchiveEntry { RawKey = raw, RelativeKey = relative };
+            RawKey = raw,
+            RelativeKey = StripKnownWrappers(raw)
         }).ToList();
+    }
+
+    private static string StripKnownWrappers(string key)
+    {
+        var segments = key.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        while (segments.Count > 1 &&
+               WrapperNames.Any(wrapper => string.Equals(wrapper, segments[0], StringComparison.OrdinalIgnoreCase)))
+        {
+            segments.RemoveAt(0);
+        }
+
+        return string.Join('/', segments);
     }
 
     private static bool HasTraversal(string key)
