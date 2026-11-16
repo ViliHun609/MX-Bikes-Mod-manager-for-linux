@@ -32,7 +32,7 @@ Comment=Manage MX Bikes mods from your Proton prefix
 Exec=$APP_NAME
 Icon=$APP_NAME
 Terminal=false
-Categories=Game;Utility;
+Categories=Game;
 StartupWMClass=MXBikesModManager
 EOF
 cp "$APPDIR/$APP_NAME.desktop" "$APPDIR/usr/share/applications/"

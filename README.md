@@ -182,9 +182,29 @@ downloads it into `data/tools/`). AppRun forwards arguments, so `--scan` works t
 When running the AppImage, put `appsettings.json` next to the `.AppImage` file (or pass
 `--config`) and the app writes its `data/` folder next to it as well.
 
+## Install as a desktop app
+
+```bash
+scripts/install-desktop.sh
+```
+
+This copies the AppImage, `appsettings.json` and `data/` into
+`~/.local/opt/mxbikes-mod-manager/`, installs the icon and a `.desktop` launcher, and
+refreshes the desktop/icon caches. No root is required.
+
+- `--appimage <path>` installs a different build.
+- `--uninstall` removes the launcher and AppImage and moves config/data to a timestamped backup.
+- `--purge` removes everything.
+
+See [`INSTALL.md`](INSTALL.md) for the full checklist, manual install and update notes.
+
+GitHub auto-updates are not wired yet: they need a GitHub repository, release workflow and
+`gh-releases-zsync` update information (the checklist covers the steps).
+
 ## Project layout
 
 ```
+INSTALL.md                        desktop install / update checklist
 appsettings.json                  portable configuration
 src/MXBikesModManager/
   Models/       config + mod entry models
@@ -197,6 +217,7 @@ src/MXBikesModManager/
   Assets/       icon (svg/png/ico)
 tests/MXBikesModManager.Tests/    xUnit test suite
 scripts/build-appimage.sh         AppImage packaging
+scripts/install-desktop.sh        per-user desktop installer / uninstaller
 data/                             runtime data (gitignored)
 ```
 
