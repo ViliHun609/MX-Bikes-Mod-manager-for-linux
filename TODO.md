@@ -12,8 +12,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Unit tests for the scroll maths and config default (86 total)
 - [x] README + config docs
 - [ ] User checks the feel (tune ease/time if needed)
-- [ ] Commit this batch
-- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Commit this batch (`cd7f1a3`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `7b0bc69642205ce64b5c452df2bf8259571c5d6898828fe5e058b0ff83824aab`
 - [x] Decided against extra blur effects for now
 
 ## Drag & drop / Avalonia 12 (done)
