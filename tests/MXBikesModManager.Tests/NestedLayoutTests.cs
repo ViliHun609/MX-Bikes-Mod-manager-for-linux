@@ -113,6 +113,77 @@ public class NestedLayoutTests
     }
 
     [Fact]
+    public async Task Rider_gear_paints_are_installed_as_a_layout_not_as_bike_paints()
+    {
+        using var env = new TestEnvironment();
+        var zip = MakeZip(env.Root, "2024 GEAR FASTHOUSE.rar",
+            ("2024 GEAR FASTHOUSE/mods/rider/riders/default_mx/paints/FASTHOUSE Red.pnt", "paint"),
+            ("2024 GEAR FASTHOUSE/mods/rider/riders/default_mx/paints/FASTHOUSE White.pnt", "paint"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+
+        Assert.False(plan.IsBikePaint);
+        Assert.True(plan.HasGameLayout);
+        Assert.Equal("rider", plan.Type!.Key);
+        Assert.Equal("riders", plan.LayoutSubfolder);
+
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message + " errors: " + string.Join("; ", result.Errors));
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "rider", "riders", "default_mx", "paints", "FASTHOUSE Red.pnt")));
+        Assert.False(Directory.Exists(Path.Combine(
+            env.ModsRoot, "rider", "riders", "2024 GEAR FASTHOUSE", "mods")));
+    }
+
+    [Fact]
+    public async Task Rider_paints_without_a_type_folder_do_not_duplicate_riders()
+    {
+        using var env = new TestEnvironment();
+        var zip = MakeZip(env.Root, "2024 GEAR FASTHOUSE.rar",
+            ("riders/default_mx/paints/FASTHOUSE Red.pnt", "paint"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+
+        Assert.False(plan.IsBikePaint);
+        Assert.False(plan.HasGameLayout);
+        Assert.Equal("rider", plan.DetectedTypeKey);
+
+        // The dialog pre-fills the "riders" subfolder from the file name.
+        installer.Finalize(plan, env.Type("rider"), "riders");
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "rider", "riders", "default_mx", "paints", "FASTHOUSE Red.pnt")));
+        Assert.False(Directory.Exists(Path.Combine(
+            env.ModsRoot, "rider", "riders", "riders")));
+    }
+
+    [Fact]
+    public async Task A_bike_paint_pack_still_uses_the_paint_flow()
+    {
+        using var env = new TestEnvironment();
+        env.MakeDirectory("bikes/AK KTM SXF 250F/paints");
+        var zip = MakeZip(env.Root, "blue.zip",
+            ("bikes/AK KTM SXF 250F/paints/Blue Flame.pnt", "paint"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+
+        Assert.True(plan.IsBikePaint);
+        Assert.True(installer.FinalizePaint(plan, "AK KTM SXF 250F"));
+
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "bikes", "AK KTM SXF 250F", "paints", "Blue Flame.pnt")));
+    }
+
+    [Fact]
     public async Task A_dropped_folder_with_a_nested_layout_is_installed_per_file()
     {
         using var env = new TestEnvironment();

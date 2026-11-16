@@ -87,11 +87,12 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-104 tests cover scanning/pairing, name-based categories, toggling, installs (including
+107 tests cover scanning/pairing, name-based categories, toggling, installs (including
 zip-slip attempts, nested game layouts in archives and folders, type/subfolder
-suggestions and confirmation, paint targeting and backups), system-trash guards, themes
-and icon resolution, smooth-scroll maths, TGA decoding (uncompressed + RLE), PiBoSo INI
-metadata, the metadata cache, and Steam/Proton prefix detection.
+suggestions and confirmation, rider-gear paint detection, paint targeting and backups),
+system-trash guards, themes and icon resolution, smooth-scroll maths, TGA decoding
+(uncompressed + RLE), PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix
+detection.
 
 ## Configuration (`appsettings.json`)
 

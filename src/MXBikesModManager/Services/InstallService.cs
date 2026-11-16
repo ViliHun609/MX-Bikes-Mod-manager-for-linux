@@ -193,9 +193,15 @@ public sealed class InstallService
         var relativeKeys = mapped.Select(e => e.RelativeKey).ToList();
         plan.DetectedKind = DescribeContent(relativeKeys);
 
+        // Case 1: the archive already contains a game layout, possibly wrapped several levels
+        // deep (mods/rider/riders/..., MX Bikes/mods/rider/..., DownloadPack/mods/rider/...).
+        var layout = DetectLayout(rawKeys);
+
         // Paint packs are .pnt files without a .pkz (often wrapped in a paints/ folder).
-        // They need a bike choice rather than a type folder, so handle them before layout detection.
-        if (LooksLikeBikePaint(relativeKeys))
+        // They use the bike picker, but only when this is not a rider/track/etc. layout.
+        // Rider gear paints (rider/riders/.../paints) are normal layout files.
+        if ((layout is null || string.Equals(layout.Type.Key, "bikes", StringComparison.OrdinalIgnoreCase)) &&
+            LooksLikeBikePaint(relativeKeys))
         {
             plan.Entries.AddRange(mapped);
             plan.IsBikePaint = true;
@@ -204,9 +210,6 @@ public sealed class InstallService
             return plan;
         }
 
-        // Case 1: the archive already contains a game layout, possibly wrapped several levels
-        // deep (mods/rider/riders/..., MX Bikes/mods/rider/..., DownloadPack/mods/rider/...).
-        var layout = DetectLayout(rawKeys);
         if (layout is not null)
         {
             ApplyLayout(plan, layout, sourcePath, rawKeys, isFolder: false);
@@ -284,6 +287,14 @@ public sealed class InstallService
         var wrapName = Path.GetFileNameWithoutExtension(plan.SourcePath);
         if (string.IsNullOrWhiteSpace(wrapName)) wrapName = "Imported Mod";
 
+        // Avoid rider/riders/riders/... when the pack already starts with the chosen subfolder.
+        var subfolderToStrip = preferredSubfolder?.Trim();
+        var stripLeadingSubfolder = !string.IsNullOrWhiteSpace(subfolderToStrip) &&
+            plan.Entries.Count > 0 &&
+            plan.Entries.All(e => e.RelativeKey.StartsWith(
+                subfolderToStrip + "/", StringComparison.OrdinalIgnoreCase));
+        var stripLength = stripLeadingSubfolder ? subfolderToStrip!.Length + 1 : 0;
+
         foreach (var entry in plan.Entries)
         {
             if (HasTraversal(entry.RelativeKey))
@@ -291,7 +302,11 @@ public sealed class InstallService
                 plan.Warnings.Add($"Skipped unsafe path: {entry.RelativeKey}");
                 continue;
             }
-            var relative = wrap ? Path.Combine(wrapName, entry.RelativeKey) : entry.RelativeKey;
+
+            var entryRelative = stripLength > 0 ? entry.RelativeKey[stripLength..] : entry.RelativeKey;
+            if (entryRelative.Length == 0) continue;
+
+            var relative = wrap ? Path.Combine(wrapName, entryRelative) : entryRelative;
             var destination = Path.Combine(typeRoot, relative.Replace('/', Path.DirectorySeparatorChar));
             if (!IsInsideModsRoot(destination))
             {
@@ -527,6 +542,12 @@ public sealed class InstallService
         return Path.GetFileName(key);
     }
 
+    private static readonly HashSet<string> RiderGearFolders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "rider", "riders", "boots", "helmets", "helmetcams", "protections", "gloves", "goggles",
+        "animations", "fonts"
+    };
+
     private static bool LooksLikeBikePaint(IReadOnlyCollection<string> keys)
     {
         if (keys.Count == 0) return false;
@@ -536,6 +557,10 @@ public sealed class InstallService
         {
             var extension = Path.GetExtension(key).ToLowerInvariant();
             if (extension is ".pkz" or ".map" or ".trh" or ".amb" or ".tyre") return false;
+
+            // Rider gear packs also contain .pnt files; they are not bike paints.
+            if (key.Split('/').Any(segment => RiderGearFolders.Contains(segment))) return false;
+
             if (extension == ".pnt") hasPaint = true;
         }
 
@@ -777,7 +802,15 @@ public sealed class InstallService
 
         if (extensions.Contains(".map") || extensions.Contains(".trh") || extensions.Contains(".amb")) return "tracks";
         if (extensions.Contains(".tyre")) return "tyres";
-        if (extensions.Contains(".pnt") || extensions.Contains(".scl") || extensions.Contains(".skn")) return "bikes";
+        if (extensions.Contains(".pnt") || extensions.Contains(".scl") || extensions.Contains(".skn"))
+        {
+            // .pnt is used by both bike paints and rider gear paints.
+            if (keys.Any(key => key.Split('/').Any(segment => RiderGearFolders.Contains(segment))))
+            {
+                return "rider";
+            }
+            return "bikes";
+        }
         return null;
     }
 

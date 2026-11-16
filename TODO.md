@@ -14,9 +14,12 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Retargeting to another type/subfolder strips the old one (no `boots/riders/…`)
 - [x] Dropped folders with a nested game layout install per-file into the right place
 - [x] Normal dropped folders still copy as one folder (regression test)
-- [x] Tests for all variants + trash guards (104 total)
+- [x] Tests for all variants + trash guards (107 total)
+- [x] Rider gear packs (`rider/riders/.../paints/*.pnt`) are no longer sent to the bike-paint picker
+- [x] Rider paint packs without a `rider/` type folder no longer duplicate `riders/`
 - [x] README + config docs
-- [ ] User checks a real nested pack, a folder drop, and the Trash toggle
+- [ ] User re-tests “2024 GEAR FASTHOUSE.rar” (should land in `rider/riders/default_mx/paints`)
+- [ ] User checks a folder drop and the Trash toggle
 - [x] Commit this batch (`0fd5835`)
 - [x] Rebuild the AppImage and record the new SHA-256:
       `f6c993a2dd45638c52fe14eafe242a7bb2d8b5aba611e571c92432c90fee57e3`
