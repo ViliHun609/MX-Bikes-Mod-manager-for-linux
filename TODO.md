@@ -17,8 +17,11 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Tests for all variants + trash guards (104 total)
 - [x] README + config docs
 - [ ] User checks a real nested pack, a folder drop, and the Trash toggle
-- [ ] Commit this batch
-- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Commit this batch (`0fd5835`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `f6c993a2dd45638c52fe14eafe242a7bb2d8b5aba611e571c92432c90fee57e3`
+- [x] Build script now packages to a `.new` file and moves it into place, so a running
+      AppImage no longer blocks rebuilds
 
 ## Smooth scrolling (done)
 

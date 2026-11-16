@@ -70,7 +70,13 @@ TOOL="$(find_appimagetool)"
 echo "==> Packaging AppImage with $TOOL"
 export ARCH=x86_64
 export APPIMAGE_EXTRACT_AND_RUN="${APPIMAGE_EXTRACT_AND_RUN:-1}"
-"$TOOL" --no-appstream "$APPDIR" "$DIST/$APP_NAME-x86_64.AppImage"
 
-chmod +x "$DIST/$APP_NAME-x86_64.AppImage"
-echo "==> Done: $DIST/$APP_NAME-x86_64.AppImage"
+# Package next to the final file, then move it into place. This keeps a running
+# AppImage usable while a new build is produced.
+OUTPUT="$DIST/$APP_NAME-x86_64.AppImage"
+TEMP_OUTPUT="$OUTPUT.new"
+"$TOOL" --no-appstream "$APPDIR" "$TEMP_OUTPUT"
+
+chmod +x "$TEMP_OUTPUT"
+mv -f "$TEMP_OUTPUT" "$OUTPUT"
+echo "==> Done: $OUTPUT"
