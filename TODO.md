@@ -2,18 +2,18 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Current: bikes/tracks icon polish
+## Bikes/tracks icon polish (done)
 
-- [x] Replace the bikes glyph with a simplified right-facing dirt bike
-      (UIX enduro solid + wheel hub holes)
-- [x] Replace the muddy UIX track glyph with the Font Awesome checkered flag
-- [x] Nudge tab icons to 17 px for legibility
-- [x] Keep MIT / CC BY credits accurate (Bootstrap, UIX, Font Awesome)
+- [x] Trace the user-supplied dirt-bike reference into a right-facing vector silhouette
+      (clean wheels/spokes, forks, fenders; no rider)
+- [x] Keep the Font Awesome checkered flag for Tracks
+- [x] Tab icons at 17 px
+- [x] Accurate credits (Bootstrap MIT, Font Awesome CC BY, custom bike silhouette)
 - [x] Build + 108 tests pass
 - [ ] User visual check in the tab bar
-- [x] Commit (`7675ef2`)
-- [x] Rebuild the AppImage and record the new SHA-256:
-      `ebe5f5aa76fc57b87467dcf4fbcbe7ffbff21868e352da582475a84637ea0b08`
+- [x] Commit (`599f986`)
+- [x] AppImage SHA-256:
+      `d78fdcc555bede9187c54c52ebabf7c832fc553dd203e358296045b9ab646ca2`
 
 ## Cleanup pass (done)
 
