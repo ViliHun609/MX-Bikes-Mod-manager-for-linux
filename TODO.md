@@ -19,8 +19,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Catch file/folder picker failures (portal issues now show a clear message)
 - [x] Remove `Avalonia.Diagnostics` (no 12.x package; debug inspector shortcut is gone)
 - [ ] User performs one real drag from Nautilus (then we read the log)
-- [ ] Commit this batch
-- [ ] Rebuild the AppImage and record the new SHA-256
+- [x] Commit this batch (`ed228b3`)
+- [x] Rebuild the AppImage and record the new SHA-256:
+      `378d9fa6bfce6f281237ce48e58cbf7f5419064ea0400ad1af1530f0e194ab39`
 
 ## Themes (done)
 
