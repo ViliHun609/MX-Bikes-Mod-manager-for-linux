@@ -14,7 +14,8 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Commit the cleanup (`226e924`)
 - [x] Rebuild the AppImage and record the new SHA-256:
       `9e002f61a1a8374f83d648ca6c35fe440a1294efb313a1da30991f4375369acb`
-- [ ] Delete `build/`, `bin/` and `obj/` generated files from the working tree
+- [x] Delete `build/`, `bin/` and `obj/` generated files from the working tree
+- [x] Clear the app trash of the two broken Fasthouse installs and the old duplicate boot copy
 
 ## Current: source-to-Trash + nested packaging
 
