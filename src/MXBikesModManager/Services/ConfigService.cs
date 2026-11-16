@@ -177,7 +177,22 @@ public sealed class ConfigService
                 new()
                 {
                     Key = "bikes", Folder = "bikes", Title = "Bikes", Icon = "🏍",
-                    PairedFolder = true
+                    PairedFolder = true,
+                    DefaultCategory = "Other",
+                    CategoryRules =
+                    {
+                        new() { Name = "A-Kit", Pattern = "^AK[ _-]" },
+                        new() { Name = "85cc", Pattern = "^85(cc)?[ _-]" },
+                        new() { Name = "MX1 250/450", Pattern = "^MX1OEM" },
+                        new() { Name = "MX2 125/250", Pattern = "^MX2OEM" },
+                        new() { Name = "MX3 300/500", Pattern = "^MX3OEM" },
+                        new() { Name = "Electric MX", Pattern = "^MXEOEM" },
+                        new() { Name = "SM1 450", Pattern = "^SM1OEM" },
+                        new() { Name = "SM2 250", Pattern = "^SM2OEM" },
+                        new() { Name = "SM Classic", Pattern = "^SMCOEM" },
+                        new() { Name = "Electric SM", Pattern = "^SMEOEM" },
+                        new() { Name = "Adventure", Pattern = "^CRF1000" }
+                    }
                 },
                 new()
                 {

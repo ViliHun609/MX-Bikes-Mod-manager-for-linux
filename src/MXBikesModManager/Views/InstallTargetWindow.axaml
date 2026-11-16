@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:MXBikesModManager.Models"
         x:Class="MXBikesModManager.Views.InstallTargetWindow"
-        Title="Choose mod type"
+        Title="Choose install target"
         Width="580"
         SizeToContent="Height"
         CanResize="False"
@@ -16,7 +16,7 @@
 
     <TextBlock Text="Where should this mod be installed?" FontWeight="SemiBold" Margin="0,4,0,0" />
 
-    <ListBox x:Name="TypeList" Height="188" SelectionChanged="OnTypeChanged">
+    <ListBox x:Name="TypeList" Height="196" SelectionChanged="OnTypeChanged">
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="models:ModTypeConfig">
           <StackPanel Spacing="1" Margin="4,3">
@@ -27,7 +27,15 @@
       </ListBox.ItemTemplate>
     </ListBox>
 
-    <StackPanel Spacing="6">
+    <StackPanel x:Name="PaintPanel" Spacing="6" IsVisible="False">
+      <TextBlock Text="Which bike is this paint for?" Classes="muted" FontSize="12" />
+      <AutoCompleteBox x:Name="PaintBikeBox"
+                       Watermark="Start typing a bike name…"
+                       FilterMode="Contains"
+                       MinimumPrefixLength="1" />
+    </StackPanel>
+
+    <StackPanel x:Name="SubfolderPanel" Spacing="6">
       <TextBlock Text="Subfolder (optional)" Classes="muted" FontSize="12" />
       <TextBox x:Name="SubfolderBox" Watermark="e.g. Mods for tracks, leave empty for the type folder" />
     </StackPanel>

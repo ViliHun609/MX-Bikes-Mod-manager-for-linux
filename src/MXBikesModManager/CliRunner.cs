@@ -55,6 +55,19 @@ public static class CliRunner
                 $"{type.DisplayTitle,-10} {result.Entries.Count,6} {enabled,8} {disabled,9} {result.WithPreview,8} " +
                 $"{PathUtil.FormatSize(size),10}  {(result.Problems.Count > 0 ? result.Problems[0] : string.Empty)}");
 
+            var categories = result.Entries
+                .Where(e => !string.IsNullOrEmpty(e.Category))
+                .GroupBy(e => e.Category)
+                .OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (categories.Count > 0)
+            {
+                Console.WriteLine("    categories: " +
+                    string.Join(" · ", categories.Select(g => $"{g.Key} {g.Count()}")));
+            }
+
             foreach (var entry in result.Entries.Take(3))
             {
                 var name = entry.DisplayName;

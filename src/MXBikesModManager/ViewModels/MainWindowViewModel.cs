@@ -259,15 +259,33 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             var plan = _installer.Analyze(path, SelectedType?.Type.Key);
 
-            if (plan.NeedsTypeChoice)
+            if (plan.NeedsTypeChoice || plan.IsBikePaint)
             {
-                var choice = await Interaction.PickInstallTypeAsync(plan);
+                var paintBikes = plan.IsBikePaint
+                    ? _installer.GetPaintBikes()
+                    : Array.Empty<string>();
+                var choice = await Interaction.PickInstallTypeAsync(plan, paintBikes);
                 if (choice is null)
                 {
                     Status = $"Skipped {Path.GetFileName(path)}.";
                     continue;
                 }
-                _installer.Finalize(plan, choice.Type, choice.Subfolder);
+
+                if (!string.IsNullOrWhiteSpace(choice.PaintBike))
+                {
+                    if (!_installer.FinalizePaint(plan, choice.PaintBike))
+                    {
+                        var warning = string.Join(Environment.NewLine, plan.Warnings);
+                        await Interaction.ShowMessageAsync(
+                            $"Cannot install {Path.GetFileName(path)}",
+                            warning.Length > 0 ? warning : "No paint files were found.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    _installer.Finalize(plan, choice.Type, choice.Subfolder);
+                }
             }
 
             if (!plan.Ready)

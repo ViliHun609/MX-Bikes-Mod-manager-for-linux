@@ -98,7 +98,7 @@ public sealed partial class ModTypeViewModel : ObservableObject
 
     public string CounterText => $"{EnabledCount}/{TotalCount} enabled";
 
-    public IReadOnlyList<string> SortModes { get; } = new[] { "Name", "Name (Z-A)", "Largest", "Newest" };
+    public IReadOnlyList<string> SortModes { get; } = new[] { "Name", "Name (Z-A)", "Category", "Largest", "Newest" };
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnHideDisabledChanged(bool value) => ApplyFilter();
@@ -118,15 +118,14 @@ public sealed partial class ModTypeViewModel : ObservableObject
             AllItems.Add(item);
         }
 
-        if (Type.CategorizeBySubfolder)
+        // Categories can come from subfolders or from name rules (e.g. MX1OEM_, 85cc_).
+        foreach (var group in AllItems
+                     .Where(i => !string.IsNullOrEmpty(i.Category))
+                     .GroupBy(i => i.Category)
+                     .OrderByDescending(g => g.Count())
+                     .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
         {
-            foreach (var group in AllItems
-                         .Where(i => !string.IsNullOrEmpty(i.Category))
-                         .GroupBy(i => i.Category)
-                         .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase))
-            {
-                Categories.Add(new CategoryFilterViewModel(group.Key) { Count = group.Count() });
-            }
+            Categories.Add(new CategoryFilterViewModel(group.Key) { Count = group.Count() });
         }
 
         Categories[0].Count = AllItems.Count;
@@ -160,6 +159,9 @@ public sealed partial class ModTypeViewModel : ObservableObject
         query = SortMode switch
         {
             "Name (Z-A)" => query.OrderByDescending(i => i.Name, StringComparer.OrdinalIgnoreCase),
+            "Category" => query
+                .OrderBy(i => string.IsNullOrEmpty(i.Category) ? "\uffff" : i.Category, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase),
             "Largest" => query.OrderByDescending(i => i.Entry.SizeBytes),
             "Newest" => query.OrderByDescending(i => LastWrite(i)),
             _ => query.OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase)

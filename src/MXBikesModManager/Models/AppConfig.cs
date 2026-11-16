@@ -50,9 +50,22 @@ public sealed class ModTypeConfig
     public List<string> ScanSubfolders { get; set; } = new();
     public bool CategorizeBySubfolder { get; set; }
 
+    /// <summary>Optional name-based categories, checked in order (first match wins).</summary>
+    public List<CategoryRule> CategoryRules { get; set; } = new();
+
+    /// <summary>Category for entries no rule matched. Empty means "leave uncategorised".</summary>
+    public string DefaultCategory { get; set; } = string.Empty;
+
     public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Folder : Title;
     public IEnumerable<string> SubfoldersToScan =>
         ScanSubfolders.Count > 0 ? ScanSubfolders : new[] { string.Empty };
+}
+
+/// <summary>Maps mod names to a category, e.g. "^MX1OEM_" → "MX1 250/450".</summary>
+public sealed class CategoryRule
+{
+    public string Name { get; set; } = string.Empty;
+    public string Pattern { get; set; } = string.Empty;
 }
 
 public sealed class UiConfig

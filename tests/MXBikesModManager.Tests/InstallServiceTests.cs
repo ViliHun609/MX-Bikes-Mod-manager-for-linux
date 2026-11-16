@@ -150,4 +150,150 @@ public class InstallServiceTests
         Assert.True(result.Success);
         Assert.True(File.Exists(Path.Combine(env.ModsRoot, "bikes", "Downloaded Mod", "paints", "a.pnt")));
     }
+
+    [Fact]
+    public async Task Bare_pnt_is_detected_as_a_bike_paint_and_targets_the_chosen_bike()
+    {
+        using var env = new TestEnvironment();
+        env.MakeDirectory("bikes/AK KTM SXF 250F/paints");
+        var pnt = env.Touch("downloads/Blue Flame.pnt", "paint-data");
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(pnt);
+
+        Assert.True(plan.IsBikePaint);
+        Assert.True(plan.NeedsTypeChoice);
+        Assert.Null(plan.Type);
+        Assert.Contains("AK KTM SXF 250F", installer.GetPaintBikes());
+
+        Assert.True(installer.FinalizePaint(plan, "AK KTM SXF 250F"));
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        var installed = Path.Combine(env.ModsRoot, "bikes", "AK KTM SXF 250F", "paints", "Blue Flame.pnt");
+        Assert.True(File.Exists(installed));
+        Assert.Equal("paint-data", File.ReadAllText(installed));
+    }
+
+    [Fact]
+    public async Task Paint_archive_lands_flat_in_the_bike_paints_folder()
+    {
+        using var env = new TestEnvironment();
+        env.MakeDirectory("bikes/AK Honda CRF 450F/paints");
+        var zip = MakeZip(env.Root, "Team Graphics.zip",
+            ("paints/blue.pnt", "blue"),
+            ("paints/red.pnt", "red"),
+            ("readme.txt", "notes"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+        Assert.True(plan.IsBikePaint);
+        Assert.True(plan.NeedsTypeChoice);
+
+        Assert.True(installer.FinalizePaint(plan, "AK Honda CRF 450F"));
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        var paints = Path.Combine(env.ModsRoot, "bikes", "AK Honda CRF 450F", "paints");
+        Assert.Equal("blue", File.ReadAllText(Path.Combine(paints, "blue.pnt")));
+        Assert.Equal("red", File.ReadAllText(Path.Combine(paints, "red.pnt")));
+        Assert.Equal("notes", File.ReadAllText(Path.Combine(paints, "readme.txt")));
+        Assert.Empty(Directory.GetDirectories(Path.Combine(env.ModsRoot, "bikes"), "Team Graphics"));
+    }
+
+    [Fact]
+    public async Task Paint_archive_using_the_full_game_layout_still_asks_for_a_bike()
+    {
+        using var env = new TestEnvironment();
+        env.MakeDirectory("bikes/AK Yamaha YZF 450F/paints");
+        var zip = MakeZip(env.Root, "layout.zip",
+            ("bikes/AK Yamaha YZF 450F/paints/one.pnt", "one"),
+            ("bikes/AK Yamaha YZF 450F/paints/two.pnt", "two"));
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(zip);
+
+        Assert.True(plan.IsBikePaint);
+        Assert.True(plan.NeedsTypeChoice);
+        Assert.Null(plan.Type);
+
+        Assert.True(installer.FinalizePaint(plan, "AK Yamaha YZF 450F"));
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "bikes", "AK Yamaha YZF 450F", "paints", "one.pnt")));
+    }
+
+    [Fact]
+    public async Task Replacing_a_paint_backs_up_the_old_file()
+    {
+        using var env = new TestEnvironment();
+        env.MakeDirectory("bikes/AK KTM SXF 250F/paints");
+        env.Touch("bikes/AK KTM SXF 250F/paints/blue.pnt", "old-paint");
+        var pnt = env.Touch("downloads/blue.pnt", "new-paint");
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(pnt);
+        Assert.True(installer.FinalizePaint(plan, "AK KTM SXF 250F"));
+        Assert.Equal(1, plan.OverwriteCount);
+
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success);
+        Assert.Equal(1, result.BackedUp);
+        Assert.Equal("new-paint", File.ReadAllText(
+            Path.Combine(env.ModsRoot, "bikes", "AK KTM SXF 250F", "paints", "blue.pnt")));
+        var backups = Directory.GetFiles(env.Config.Data.Backups, "blue.pnt", SearchOption.AllDirectories);
+        Assert.Single(backups);
+        Assert.Equal("old-paint", File.ReadAllText(backups[0]));
+    }
+
+    [Fact]
+    public async Task Paint_for_a_disabled_bike_goes_into_the_disabled_folder()
+    {
+        using var env = new TestEnvironment();
+        env.Touch("bikes/AK KTM SXF 250F.pkz.disabled", "pkz");
+        env.MakeDirectory("bikes/AK KTM SXF 250F.disabled/paints");
+        var pnt = env.Touch("downloads/blue.pnt", "paint");
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(pnt);
+        Assert.Contains("AK KTM SXF 250F", installer.GetPaintBikes());
+
+        Assert.True(installer.FinalizePaint(plan, "AK KTM SXF 250F"));
+        var result = await installer.InstallAsync(plan);
+
+        Assert.True(result.Success, result.Message);
+        Assert.True(File.Exists(Path.Combine(
+            env.ModsRoot, "bikes", "AK KTM SXF 250F.disabled", "paints", "blue.pnt")));
+        Assert.False(Directory.Exists(Path.Combine(env.ModsRoot, "bikes", "AK KTM SXF 250F")));
+    }
+
+    [Theory]
+    [InlineData("../evil")]
+    [InlineData("nested/bike")]
+    public void Paint_target_rejects_bike_names_that_are_paths(string bike)
+    {
+        using var env = new TestEnvironment();
+        var pnt = env.Touch("downloads/blue.pnt", "paint");
+
+        var installer = new InstallService(env.Config);
+        var plan = installer.Analyze(pnt);
+
+        Assert.False(installer.FinalizePaint(plan, bike));
+        Assert.Empty(plan.Files);
+    }
+
+    [Fact]
+    public void Suggests_a_bike_when_its_name_is_in_the_file_name()
+    {
+        var bikes = new[] { "AK KTM SXF 250F", "AK Honda CRF 450F", "MX1OEM_2023_KTM_450_SX-F" };
+
+        Assert.Equal("AK KTM SXF 250F",
+            InstallService.SuggestPaintBike("/tmp/AK KTM SXF 250F - blue graphics.zip", bikes));
+        Assert.Equal("MX1OEM_2023_KTM_450_SX-F",
+            InstallService.SuggestPaintBike("/tmp/MX1OEM_2023_KTM_450_SX-F_paint.zip", bikes));
+        Assert.Null(InstallService.SuggestPaintBike("/tmp/random graphics.zip", bikes));
+    }
 }

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using MXBikesModManager.Models;
 
 namespace MXBikesModManager.Services;
@@ -60,6 +61,7 @@ public sealed class ModScanner
 
         var entries = new List<ModEntry>();
         var byKey = new Dictionary<string, ModEntry>(StringComparer.OrdinalIgnoreCase);
+        var categoryRules = CompileCategoryRules(type);
 
         foreach (var sub in type.SubfoldersToScan)
         {
@@ -68,7 +70,7 @@ public sealed class ModScanner
             var root = string.IsNullOrEmpty(sub) ? typeDir : Path.Combine(typeDir, sub);
             if (!Directory.Exists(root)) continue;
 
-            var category = type.CategorizeBySubfolder && !string.IsNullOrEmpty(sub)
+            var subfolderCategory = type.CategorizeBySubfolder && !string.IsNullOrEmpty(sub)
                 ? PrettyCategory(sub)
                 : string.Empty;
 
@@ -76,6 +78,8 @@ public sealed class ModScanner
             foreach (var file in PathUtil.EnumerateFilesSafe(root, "*"))
             {
                 if (!TryParseArchiveName(Path.GetFileName(file), suffix, out var baseName, out var disabled)) continue;
+
+                var category = Categorize(baseName, subfolderCategory, type.DefaultCategory, categoryRules);
 
                 var entry = new ModEntry
                 {
@@ -103,6 +107,7 @@ public sealed class ModScanner
                 if (dirName.StartsWith('.')) continue;
                 if (!TryParseFolderName(dirName, suffix, out var baseName, out var disabled)) continue;
 
+                var category = Categorize(baseName, subfolderCategory, type.DefaultCategory, categoryRules);
                 var key = Key(category, baseName);
                 if (type.PairedFolder && byKey.TryGetValue(key, out var paired))
                 {
@@ -161,6 +166,40 @@ public sealed class ModScanner
         result.WithMetadata = entries.Count(e => e.Info is { IsEmpty: false });
         result.WithPreview = entries.Count(e => e.Preview is not null);
         return result;
+    }
+
+    private List<(string Name, Regex Pattern)> CompileCategoryRules(ModTypeConfig type)
+    {
+        var rules = new List<(string Name, Regex Pattern)>();
+        foreach (var rule in type.CategoryRules)
+        {
+            if (string.IsNullOrWhiteSpace(rule.Name) || string.IsNullOrWhiteSpace(rule.Pattern)) continue;
+            try
+            {
+                rules.Add((rule.Name.Trim(), new Regex(rule.Pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)));
+            }
+            catch (ArgumentException ex)
+            {
+                _log.Warn($"Ignoring invalid category pattern '{rule.Pattern}': {ex.Message}");
+            }
+        }
+        return rules;
+    }
+
+    private static string Categorize(
+        string baseName,
+        string subfolderCategory,
+        string defaultCategory,
+        List<(string Name, Regex Pattern)> rules)
+    {
+        if (subfolderCategory.Length > 0) return subfolderCategory;
+
+        foreach (var (name, pattern) in rules)
+        {
+            if (pattern.IsMatch(baseName)) return name;
+        }
+
+        return defaultCategory;
     }
 
     private void Enrich(ModEntry entry, bool useCache)

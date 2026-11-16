@@ -18,15 +18,22 @@ instantly by renaming them in place.
   (`capa.tga` for tracks, plus whatever preview image a mod ships), and images found in
   a mod's asset folder are used too. Bike `.pkz` files are usually PiBoSo-obfuscated,
   so tiles without any image fall back to a clean monogram.
-- **Rider/Misc categories** — filter chips for Helmets, Boots, Protections, Riders,
-  Animations, Helmet Cams, Fonts…
+- **Category chips** — Bikes are grouped by name rules into A-Kit, 85cc, MX1 250/450,
+  MX2 125/250, MX3 300/500, SM1 450, SM2 250, SM Classic, Electric MX/SM and Adventure;
+  Rider/Misc get chips from their subfolders (Helmets, Boots, Protections, Riders,
+  Animations, Helmet Cams, Fonts…). Chips are ordered by mod count and the **Category**
+  sort groups the grid by category, then name.
 - **Install mods** — drag & drop or pick `.zip`, `.7z`, `.rar`, `.tar.gz`, a bare `.pkz`
-  or a folder. Archives are routed automatically (game folder layout, `.map`/`.tyre`/
-  `.pnt` detection) and you're asked to pick a type only when it's genuinely ambiguous.
+  or a folder. Archives are routed automatically (game folder layout, `.map`/`.tyre`
+  detection) and you're asked to pick a type only when it's genuinely ambiguous.
+- **Bike paint jobs** — drop a `.pnt` file or a paint pack and the app detects it, asks
+  which bike it belongs to (with a searchable bike picker, pre-filled when the bike name
+  is in the file name) and installs it to `bikes/<bike>/paints/`. If the detection is
+  wrong you can send it to Bikes, Rider, Tyres, Tracks or Misc instead.
 - **Non-destructive** — replaced files are backed up to `data/backups/…`, removed mods go
   to `data/trash/…`, and every operation is logged to `data/logs/app.log`.
-- **Search, sort (name/size/newest), hide disabled, bulk enable/disable/remove**, launch
-  the game, open the mods folder, copy paths.
+- **Search, sort (name/category/size/newest), hide disabled, bulk enable/disable/remove**,
+  launch the game, open the mods folder, copy paths.
 - **Auto-detection** — finds the prefix via `libraryfolders.vdf` across native Steam
   libraries and Flatpak Steam; manual folder picker if that fails.
 - **Portable** — config, cache, thumbnails, backups and logs all live inside this repo
@@ -59,9 +66,9 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-32 tests cover scanning/pairing, toggling, installs (including zip-slip attempts and
-backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, the metadata cache,
-and Steam/Proton prefix detection.
+48 tests cover scanning/pairing, name-based categories, toggling, installs (including
+zip-slip attempts, paint targeting and backups), TGA decoding (uncompressed + RLE),
+PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
@@ -109,6 +116,9 @@ repo root. The file is created automatically if it is missing.
   everything in the repo (or next to the AppImage).
 - `modTypes[].scanSubfolders` — subfolders to scan; `categorizeBySubfolder` turns them
   into filter chips (used for Rider/Misc).
+- `modTypes[].categoryRules` — ordered regex rules on the mod name for chips (first match
+  wins), e.g. `{"name":"MX1 250/450","pattern":"^MX1OEM"}`. `defaultCategory` catches the
+  rest; leave it empty to keep them uncategorised.
 - `installSubfolder` — where installs go (tracks → `tracks/Mods`).
 - `ui.tileWidth/tileHeight` — card size for the grid.
 

@@ -81,6 +81,57 @@ public class ModScannerTests
         Assert.Single(misc.Problems);
     }
 
+    [Fact]
+    public async Task Name_rules_categorise_mods_and_keep_folder_pairing()
+    {
+        using var env = new TestEnvironment(config =>
+        {
+            var bikes = config.ModTypes.First(t => t.Key == "bikes");
+            bikes.DefaultCategory = "Other";
+            bikes.CategoryRules.Clear();
+            bikes.CategoryRules.Add(new Models.CategoryRule { Name = "MX1", Pattern = "^MX1OEM" });
+            bikes.CategoryRules.Add(new Models.CategoryRule { Name = "85cc", Pattern = "^85(cc)?[ _-]" });
+        });
+
+        env.Touch("bikes/MX1OEM_2023_KTM_450_SX-F.pkz");
+        env.Touch("bikes/MX1OEM_2023_KTM_450_SX-F/paints/a.pnt");
+        env.Touch("bikes/85CC_ALPHAMODS_KTM_SX2022.pkz");
+        env.Touch("bikes/Unknown_Thing.pkz");
+
+        var (scanner, _) = Create(env);
+        var result = await scanner.ScanTypeAsync(env.Type("bikes"), CancellationToken.None);
+
+        Assert.Equal(3, result.Entries.Count);
+
+        var mx1 = result.Entries.Single(e => e.BaseName.StartsWith("MX1OEM"));
+        Assert.Equal("MX1", mx1.Category);
+        Assert.NotNull(mx1.PairedFolderPath);
+
+        // Rule matching is case-insensitive.
+        Assert.Equal("85cc", result.Entries.Single(e => e.BaseName.StartsWith("85CC")).Category);
+        Assert.Equal("Other", result.Entries.Single(e => e.BaseName == "Unknown_Thing").Category);
+    }
+
+    [Fact]
+    public async Task Name_rules_do_not_override_subfolder_categories()
+    {
+        using var env = new TestEnvironment(config =>
+        {
+            var rider = config.ModTypes.First(t => t.Key == "rider");
+            rider.CategoryRules.Add(new Models.CategoryRule { Name = "Everything", Pattern = ".*" });
+        });
+
+        env.Touch("rider/helmets/Helmet_A.pkz");
+        env.Touch("rider/riders/Rider_B.pkz");
+
+        var (scanner, _) = Create(env);
+        var result = await scanner.ScanTypeAsync(env.Type("rider"), CancellationToken.None);
+
+        // Even though the catch-all rule matches, the scan subfolder category wins.
+        Assert.Equal("Helmets", result.Entries.Single(e => e.BaseName == "Helmet_A").Category);
+        Assert.Equal("Riders", result.Entries.Single(e => e.BaseName == "Rider_B").Category);
+    }
+
     [Theory]
     [InlineData("Bike.pkz", "Bike", false)]
     [InlineData("Bike.pkz.disabled", "Bike", true)]

@@ -98,9 +98,9 @@ public partial class MainWindow : Window, IUiInteraction
         return folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
     }
 
-    public async Task<InstallChoice?> PickInstallTypeAsync(InstallPlan plan)
+    public async Task<InstallChoice?> PickInstallTypeAsync(InstallPlan plan, IReadOnlyList<string> paintBikes)
     {
-        var window = new InstallTargetWindow(plan, _config.Config.ModTypes);
+        var window = new InstallTargetWindow(plan, _config.Config.ModTypes, paintBikes);
         return await window.ShowDialog<InstallChoice?>(this);
     }
 
