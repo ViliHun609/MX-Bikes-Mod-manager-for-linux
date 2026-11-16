@@ -109,7 +109,7 @@ public partial class InstallTargetWindow : Window
                         Key = PaintTypeKey,
                         Folder = "bikes/<bike>/paints",
                         Title = "Bike paint",
-                        Icon = "🖌"
+                        Icon = "paint"
                     });
                 }
                 continue;

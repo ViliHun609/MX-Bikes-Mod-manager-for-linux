@@ -32,6 +32,12 @@ instantly by renaming them in place.
   which bike it belongs to (with a searchable bike picker, pre-filled when the bike name
   is in the file name) and installs it to `bikes/<bike>/paints/`. If the detection is
   wrong you can send it to Bikes, Rider, Tyres, Tracks or Misc instead.
+- **Themes** — five dark palettes (Ember, Midnight, Forest, Violet, Mono) under
+  **Settings → Theme**. Click a card to preview it live; Save keeps it, Cancel restores
+  the previous one. The choice is stored as `ui.theme`, and `--theme <name>` overrides it
+  for a single run.
+- **Vector icons** — Bootstrap Icons (MIT) for mod types, tabs, the install-type picker,
+  empty states and toolbar buttons; no emoji, scales cleanly on HiDPI screens.
 - **Non-destructive** — replaced files are backed up to `data/backups/…`, removed mods go
   to `data/trash/…`, and every operation is logged to `data/logs/app.log`.
 - **Search, sort (name/category/size/newest), hide disabled, bulk enable/disable/remove**,
@@ -59,6 +65,7 @@ Headless diagnostics (no window, prints a scan summary):
 ```bash
 dotnet run --project src/MXBikesModManager -- --scan
 dotnet run --project src/MXBikesModManager -- --scan --mods "/path/to/…/MX Bikes/mods"
+dotnet run --project src/MXBikesModManager -- --theme midnight
 dotnet run --project src/MXBikesModManager -- --help
 ```
 
@@ -68,10 +75,10 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-61 tests cover scanning/pairing, name-based categories, toggling, installs (including
+76 tests cover scanning/pairing, name-based categories, toggling, installs (including
 zip-slip attempts, type/subfolder suggestions and confirmation, paint targeting and
-backups), TGA decoding (uncompressed + RLE), PiBoSo INI metadata, the metadata cache, and
-Steam/Proton prefix detection.
+backups), themes and icon resolution, TGA decoding (uncompressed + RLE), PiBoSo INI
+metadata, the metadata cache, and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
@@ -109,16 +116,21 @@ repo root. The file is created automatically if it is missing.
     "tileWidth": 220,
     "tileHeight": 190,
     "showPreviews": true,
-    "hideDisabledByDefault": false
+    "hideDisabledByDefault": false,
+    "theme": "ember"
   }
 }
 ```
+
+- `ui.theme` — one of `ember`, `midnight`, `forest`, `violet`, `mono`. Unknown values fall
+  back to `ember`.
 
 - `modsRoot` — the game's mods folder inside the Proton prefix. Auto-detected when empty.
 - `data.root` — relative paths resolve against the config file's folder, keeping
   everything in the repo (or next to the AppImage).
 - `modTypes[].scanSubfolders` — subfolders to scan; `categorizeBySubfolder` turns them
   into filter chips (used for Rider/Misc).
+- `modTypes[].icon` — icon key (`bike`, `track`, `tyre`, `rider`, `misc`, `paint`).
 - `modTypes[].categoryRules` — ordered regex rules on the mod name for chips (first match
   wins), e.g. `{"name":"MX1 250/450","pattern":"^MX1OEM"}`. `defaultCategory` catches the
   rest; leave it empty to keep them uncategorised.
@@ -182,3 +194,5 @@ data/                             runtime data (gitignored)
   decoder, PNG/JPEG/BMP/WebP by Avalonia/Skia.
 - Scans only read ZIP central directories and file metadata, so ~200 mods / 13 GB scan in
   well under a second after the metadata cache is warm.
+- Icons are from [Bootstrap Icons](https://icons.getbootstrap.com/) 1.11.3 (MIT), embedded
+  as vector path geometries in `AppIcons`.

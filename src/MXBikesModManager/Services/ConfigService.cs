@@ -176,7 +176,7 @@ public sealed class ConfigService
             {
                 new()
                 {
-                    Key = "bikes", Folder = "bikes", Title = "Bikes", Icon = "🏍",
+                    Key = "bikes", Folder = "bikes", Title = "Bikes", Icon = "bike",
                     PairedFolder = true,
                     DefaultCategory = "Other",
                     CategoryRules =
@@ -196,25 +196,25 @@ public sealed class ConfigService
                 },
                 new()
                 {
-                    Key = "tracks", Folder = "tracks", Title = "Tracks", Icon = "🏁",
+                    Key = "tracks", Folder = "tracks", Title = "Tracks", Icon = "track",
                     PairedFolder = true, InstallSubfolder = "Mods",
                     ScanSubfolders = { "Mods", "motocross", "supercross", "supermoto", "enduro" },
                     CategorizeBySubfolder = false
                 },
                 new()
                 {
-                    Key = "tyres", Folder = "tyres", Title = "Tyres", Icon = "🛞",
+                    Key = "tyres", Folder = "tyres", Title = "Tyres", Icon = "tyre",
                     PairedFolder = true
                 },
                 new()
                 {
-                    Key = "rider", Folder = "rider", Title = "Rider", Icon = "🧑",
+                    Key = "rider", Folder = "rider", Title = "Rider", Icon = "rider",
                     ScanSubfolders = { "riders", "helmets", "boots", "protections", "animations", "helmetcams", "fonts" },
                     CategorizeBySubfolder = true
                 },
                 new()
                 {
-                    Key = "misc", Folder = "misc", Title = "Misc", Icon = "📦",
+                    Key = "misc", Folder = "misc", Title = "Misc", Icon = "misc",
                     ScanSubfolders = { "fonts", "pitboard" },
                     CategorizeBySubfolder = true
                 }

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MXBikesModManager.ViewModels"
         xmlns:views="using:MXBikesModManager.Views"
+        xmlns:services="using:MXBikesModManager.Services"
         x:Class="MXBikesModManager.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="MX Bikes Mod Manager"
@@ -32,22 +33,46 @@
         </StackPanel>
 
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-          <Button Classes="ghost" Content="Mods folder" Command="{Binding OpenModsFolderCommand}"
-                  IsEnabled="{Binding HasModsFolder}" />
-          <Button Classes="ghost" Content="Install mod…" Command="{Binding InstallCommand}" />
-          <Button Classes="ghost" Content="Refresh" Command="{Binding RefreshCommand}" IsEnabled="{Binding !IsBusy}" />
-          <Button Classes="primary" Content="▶ Launch MX Bikes" Command="{Binding LaunchGameCommand}" />
+          <Button Classes="ghost" Command="{Binding OpenModsFolderCommand}" IsEnabled="{Binding HasModsFolder}"
+                  ToolTip.Tip="Open the mods folder">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Data="{x:Static services:AppIcons.FolderIcon}" Width="14" Height="14" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Mods folder" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="ghost" Command="{Binding InstallCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Data="{x:Static services:AppIcons.DownloadIcon}" Width="14" Height="14" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Install mod…" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="ghost" Command="{Binding RefreshCommand}" IsEnabled="{Binding !IsBusy}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Data="{x:Static services:AppIcons.RefreshIcon}" Width="14" Height="14" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Refresh" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="primary" Command="{Binding LaunchGameCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Data="{x:Static services:AppIcons.PlayIcon}" Width="13" Height="13" Stretch="Uniform"
+                    Fill="{DynamicResource AccentTextBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Launch MX Bikes" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
         </StackPanel>
 
       </Grid>
     </Border>
 
     <!-- Missing folder banner -->
-    <Border Grid.Row="1" Background="#2a1c0e" BorderBrush="#6b3f10" BorderThickness="0,0,0,1"
+    <Border Grid.Row="1" Background="{DynamicResource WarningBg}" BorderBrush="{DynamicResource WarningBorder}" BorderThickness="0,0,0,1"
             Padding="16,10" IsVisible="{Binding !HasModsFolder}">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Text="The MX Bikes mods folder could not be found. Point the manager at your Proton prefix's My Documents/PiBoSo/MX Bikes/mods folder."
-                   Foreground="#ffcf9a" TextWrapping="Wrap" VerticalAlignment="Center" />
+                   Foreground="{DynamicResource WarningText}" TextWrapping="Wrap" VerticalAlignment="Center" />
         <Button Grid.Column="1" Classes="primary" Content="Choose folder" Command="{Binding OpenSettingsCommand}" Margin="12,0,0,0" />
       </Grid>
     </Border>
@@ -60,8 +85,10 @@
       <TabControl.ItemTemplate>
         <DataTemplate x:DataType="vm:ModTypeViewModel">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,2">
+            <Path Data="{Binding IconGeometry}" Width="15" Height="15" Stretch="Uniform"
+                  Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Border Background="#1c242e" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+            <Border Background="{DynamicResource TabCountBg}" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
               <TextBlock Text="{Binding TotalCount}" FontSize="10" Classes="muted" />
             </Border>
           </StackPanel>
@@ -82,9 +109,27 @@
         <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" Margin="18,0" VerticalAlignment="Center"
                    TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Status}" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-          <Button Classes="ghost" Content="Data folder" Command="{Binding OpenDataFolderCommand}" />
-          <Button Classes="ghost" Content="Logs" Command="{Binding OpenLogsCommand}" />
-          <Button Classes="ghost" Content="Settings" Command="{Binding OpenSettingsCommand}" />
+          <Button Classes="ghost" Command="{Binding OpenDataFolderCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <Path Data="{x:Static services:AppIcons.FolderIcon}" Width="13" Height="13" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Data folder" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="ghost" Command="{Binding OpenLogsCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <Path Data="{x:Static services:AppIcons.LogsIcon}" Width="13" Height="13" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Logs" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="ghost" Command="{Binding OpenSettingsCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <Path Data="{x:Static services:AppIcons.SettingsIcon}" Width="13" Height="13" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Settings" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
         </StackPanel>
       </Grid>
     </Grid>
@@ -93,7 +138,7 @@
     <Border x:Name="DropOverlay"
             Grid.Row="0" Grid.RowSpan="4"
             IsVisible="False" IsHitTestVisible="False"
-            Background="#d910161f"
+            Background="{DynamicResource OverlayScrim}"
             BorderBrush="{DynamicResource AccentBrush}"
             BorderThickness="3"
             CornerRadius="10"

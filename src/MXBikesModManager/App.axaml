@@ -3,28 +3,7 @@
              x:Class="MXBikesModManager.App"
              RequestedThemeVariant="Dark">
 
-  <Application.Resources>
-    <Color x:Key="SystemAccentColor">#ff8a1e</Color>
-    <Color x:Key="SystemAccentColorDark1">#e0781a</Color>
-    <Color x:Key="SystemAccentColorDark2">#c26815</Color>
-    <Color x:Key="SystemAccentColorDark3">#a35610</Color>
-    <Color x:Key="SystemAccentColorLight1">#ffa347</Color>
-    <Color x:Key="SystemAccentColorLight2">#ffb76b</Color>
-    <Color x:Key="SystemAccentColorLight3">#ffcb8f</Color>
-    <SolidColorBrush x:Key="AppBg" Color="#0d1014" />
-    <SolidColorBrush x:Key="PanelBg" Color="#151a20" />
-    <SolidColorBrush x:Key="PanelBgAlt" Color="#11161b" />
-    <SolidColorBrush x:Key="CardBg" Color="#1b222a" />
-    <SolidColorBrush x:Key="CardHover" Color="#222b35" />
-    <SolidColorBrush x:Key="LineBrush" Color="#28323d" />
-    <SolidColorBrush x:Key="TextBrush" Color="#e9eff5" />
-    <SolidColorBrush x:Key="MutedBrush" Color="#8d9bab" />
-    <SolidColorBrush x:Key="AccentBrush" Color="#ff8a1e" />
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#ffa347" />
-    <SolidColorBrush x:Key="AccentTextBrush" Color="#1a1206" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#e0452f" />
-    <SolidColorBrush x:Key="PreviewBg" Color="#0b0e12" />
-  </Application.Resources>
+  <!-- Palette colours are installed at runtime by ThemeService (Settings → Theme). -->
 
   <Application.Styles>
     <FluentTheme />
@@ -99,7 +78,7 @@
     </Style>
 
     <Style Selector="Border.badge">
-      <Setter Property="Background" Value="#b30b0e12" />
+      <Setter Property="Background" Value="{DynamicResource BadgeScrim}" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="Padding" Value="6,2" />
     </Style>

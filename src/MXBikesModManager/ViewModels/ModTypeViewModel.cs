@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MXBikesModManager.Models;
+using MXBikesModManager.Services;
 
 namespace MXBikesModManager.ViewModels;
 
@@ -70,7 +72,7 @@ public sealed partial class ModTypeViewModel : ObservableObject
     public ObservableCollection<CategoryFilterViewModel> Categories { get; } = new();
 
     public string Title => Type.DisplayTitle;
-    public string Icon => Type.Icon;
+    public Geometry IconGeometry => AppIcons.Resolve(Type.Icon);
     public bool HasCategories => Categories.Count > 1;
 
     public RelayCommand<string?> OpenInFileManager { get; }

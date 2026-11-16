@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Avalonia.Media;
+using MXBikesModManager.Services;
 
 namespace MXBikesModManager.Models;
 
@@ -44,7 +47,9 @@ public sealed class ModTypeConfig
     public string Key { get; set; } = string.Empty;
     public string Folder { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
-    public string Icon { get; set; } = "📦";
+
+    /// <summary>Icon key from <see cref="AppIcons"/> (e.g. "bike", "track", "rider").</summary>
+    public string Icon { get; set; } = "misc";
     public bool PairedFolder { get; set; }
     public string InstallSubfolder { get; set; } = string.Empty;
     public List<string> ScanSubfolders { get; set; } = new();
@@ -57,6 +62,11 @@ public sealed class ModTypeConfig
     public string DefaultCategory { get; set; } = string.Empty;
 
     public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Folder : Title;
+
+    /// <summary>Vector icon for this type. Not serialised; <see cref="Icon"/> stores the key.</summary>
+    [JsonIgnore]
+    public Geometry IconGeometry => AppIcons.Resolve(Icon);
+
     public IEnumerable<string> SubfoldersToScan =>
         ScanSubfolders.Count > 0 ? ScanSubfolders : new[] { string.Empty };
 }
@@ -77,4 +87,7 @@ public sealed class UiConfig
     public string DefaultSort { get; set; } = "name";
     public bool HideDisabledByDefault { get; set; }
     public bool RememberWindow { get; set; } = true;
+
+    /// <summary>Dark palette key, see <c>ThemeService.Palettes</c>.</summary>
+    public string Theme { get; set; } = "ember";
 }

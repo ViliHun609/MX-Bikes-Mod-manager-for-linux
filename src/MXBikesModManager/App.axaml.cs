@@ -16,6 +16,9 @@ public sealed class App : Application
             var cli = new CliOptions(desktop.Args ?? Array.Empty<string>());
             var config = ConfigService.Load(cli.ConfigPath);
 
+            // Install the palette before any window is created so every DynamicResource resolves.
+            ThemeService.Apply(cli.Theme ?? config.Config.Ui.Theme);
+
             if (!string.IsNullOrWhiteSpace(cli.ModsRoot))
             {
                 // Runtime override only: don't persist a temporary path over the user's config.

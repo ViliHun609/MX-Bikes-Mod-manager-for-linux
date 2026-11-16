@@ -2,12 +2,16 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using MXBikesModManager.Services;
+using MXBikesModManager.ViewModels;
 
 namespace MXBikesModManager.Views;
 
 public partial class SettingsWindow : Window
 {
     private readonly ConfigService _config;
+    private readonly string _originalTheme = ThemeService.DefaultKey;
+    private bool _loadingThemes;
+    private bool _saved;
 
     /// <summary>Designer-only constructor; the app always passes the already-loaded config.</summary>
     public SettingsWindow()
@@ -31,10 +35,34 @@ public partial class SettingsWindow : Window
         DataPathText.Text = config.Data.Root;
         Title = $"Settings — {config.Config.Game.Name}";
 
+        _originalTheme = ThemeService.Current.Key;
+        _loadingThemes = true;
+        var options = ThemeService.Palettes.Select(p => new ThemeOptionViewModel(p)).ToList();
+        ThemeList.ItemsSource = options;
+        ThemeList.SelectedItem = options.FirstOrDefault(o => o.Key == _originalTheme) ?? options[0];
+        _loadingThemes = false;
+
+        // Closing with the title-bar X also restores the theme unless Save was pressed.
+        Closed += (_, _) =>
+        {
+            if (!_saved && !string.Equals(ThemeService.Current.Key, _originalTheme, StringComparison.OrdinalIgnoreCase))
+            {
+                ThemeService.Apply(_originalTheme);
+            }
+        };
+
         if (!Directory.Exists(config.Config.Game.ModsRoot))
         {
             ShowWarning("The current mods folder does not exist. Browse to it or use Auto-detect.");
         }
+    }
+
+    private void OnThemeChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingThemes || ThemeList.SelectedItem is not ThemeOptionViewModel option) return;
+        if (string.Equals(ThemeService.Current.Key, option.Key, StringComparison.OrdinalIgnoreCase)) return;
+        ThemeService.Apply(option.Key);
+        HideWarning();
     }
 
     private async void OnBrowse(object? sender, RoutedEventArgs e)
@@ -100,6 +128,7 @@ public partial class SettingsWindow : Window
         _config.Config.Game.AutoDetect = AutoDetectCheck.IsChecked == true;
         _config.Config.Ui.ShowPreviews = ShowPreviewsCheck.IsChecked == true;
         _config.Config.Ui.HideDisabledByDefault = HideDisabledCheck.IsChecked == true;
+        _config.Config.Ui.Theme = (ThemeList.SelectedItem as ThemeOptionViewModel)?.Key ?? _originalTheme;
 
         if (!_config.Save())
         {
@@ -107,6 +136,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        _saved = true;
         Close(true);
     }
 

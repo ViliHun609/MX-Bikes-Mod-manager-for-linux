@@ -1,16 +1,74 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MXBikesModManager.ViewModels"
         x:Class="MXBikesModManager.Views.SettingsWindow"
         Title="Settings"
-        Width="680"
+        Width="700"
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
 
+  <Window.Styles>
+    <Style Selector="ListBox.themes ListBoxItem">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="ListBox.themes ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.themes ListBoxItem:selected Border.theme-card">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="Border.theme-card">
+      <Setter Property="Background" Value="{DynamicResource PanelBgAlt}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="7" />
+    </Style>
+  </Window.Styles>
+
   <StackPanel Margin="22" Spacing="14">
 
-    <TextBlock Text="MX Bikes mods folder" FontWeight="SemiBold" />
+    <TextBlock Text="Theme" FontWeight="SemiBold" />
+    <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+               Text="Dark palettes. Click one to preview it live — Save keeps it, Cancel restores your current theme." />
+
+    <ListBox x:Name="ThemeList" Classes="themes"
+             Background="Transparent" BorderThickness="0" Padding="0"
+             SelectionChanged="OnThemeChanged">
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:ThemeOptionViewModel">
+          <Border Classes="theme-card" Width="120">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*,*,*" Height="30">
+                <Border Grid.Column="0" Background="{Binding BackgroundBrush}" CornerRadius="5,0,0,5" />
+                <Border Grid.Column="1" Background="{Binding PanelBrush}" />
+                <Border Grid.Column="2" Background="{Binding AccentBrush}" CornerRadius="0,5,5,0" />
+              </Grid>
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <Path Data="{Binding IconGeometry}" Width="13" Height="13" Stretch="Uniform"
+                      Fill="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding DisplayName}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Text="{Binding Tagline}" Classes="muted" FontSize="10"
+                         TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <TextBlock Text="MX Bikes mods folder" FontWeight="SemiBold" Margin="0,4,0,0" />
     <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
                Text="Usually inside the Proton prefix: compatdata/655500/pfx/drive_c/users/steamuser/My Documents/PiBoSo/MX Bikes/mods" />
 
@@ -34,7 +92,7 @@
       </StackPanel>
     </Border>
 
-    <TextBlock x:Name="WarningText" Foreground="#ffcf9a" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+    <TextBlock x:Name="WarningText" Foreground="{DynamicResource WarningText}" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Content="Cancel" Click="OnCancel" />

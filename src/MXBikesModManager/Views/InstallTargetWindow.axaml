@@ -19,10 +19,19 @@
     <ListBox x:Name="TypeList" Height="196" SelectionChanged="OnTypeChanged">
       <ListBox.ItemTemplate>
         <DataTemplate x:DataType="models:ModTypeConfig">
-          <StackPanel Spacing="1" Margin="4,3">
-            <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
-            <TextBlock Text="{Binding Folder}" Classes="muted" FontSize="11" />
-          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*" Margin="4,4">
+            <Border Width="36" Height="36" CornerRadius="9"
+                    Background="{DynamicResource ChipBg}"
+                    BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+                    VerticalAlignment="Center">
+              <Path Data="{Binding IconGeometry}" Width="20" Height="20" Stretch="Uniform"
+                    Fill="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Folder}" Classes="muted" FontSize="11" />
+            </StackPanel>
+          </Grid>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
@@ -44,11 +53,11 @@
       <TextBlock Text="Pick boots, helmets, protections… or type a custom folder." Classes="muted" FontSize="11" />
     </StackPanel>
 
-    <Border Background="#151c24" BorderBrush="#26313d" BorderThickness="1" CornerRadius="6" Padding="10,7">
+    <Border Background="{DynamicResource TargetBg}" BorderBrush="{DynamicResource TargetBorder}" BorderThickness="1" CornerRadius="6" Padding="10,7">
       <TextBlock x:Name="TargetText" Classes="muted" FontSize="12" TextWrapping="Wrap" />
     </Border>
 
-    <TextBlock x:Name="WarningText" Foreground="#ffcf9a" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
+    <TextBlock x:Name="WarningText" Foreground="{DynamicResource WarningText}" FontSize="12" TextWrapping="Wrap" IsVisible="False" />
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Content="Cancel" Click="OnCancel" />

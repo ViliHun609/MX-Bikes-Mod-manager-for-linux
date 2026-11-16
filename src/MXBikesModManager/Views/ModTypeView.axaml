@@ -77,7 +77,7 @@
                         <TextBlock Text="{Binding Monogram}"
                                    FontSize="38"
                                    FontWeight="Bold"
-                                   Foreground="#3b4a5a"
+                                   Foreground="{DynamicResource EmptyIconBrush}"
                                    HorizontalAlignment="Center" />
                       </StackPanel>
                       <Border Classes="badge" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
@@ -102,7 +102,7 @@
                   <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="10,4,10,8" VerticalAlignment="Bottom">
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                       <TextBlock Text="{Binding SizeText}" Classes="muted" FontSize="11" VerticalAlignment="Center" />
-                      <Border Background="#141a21" CornerRadius="4" Padding="5,1" IsVisible="{Binding HasCategory}" VerticalAlignment="Center">
+                      <Border Background="{DynamicResource ChipBg}" CornerRadius="4" Padding="5,1" IsVisible="{Binding HasCategory}" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Category}" FontSize="10" Classes="muted" />
                       </Border>
                     </StackPanel>
@@ -120,6 +120,8 @@
                     VerticalAlignment="Center"
                     Spacing="6"
                     Margin="0,80,0,0">
+          <Path Data="{Binding IconGeometry}" Width="46" Height="46" Stretch="Uniform"
+                Fill="{DynamicResource EmptyIconBrush}" Opacity="0.55" HorizontalAlignment="Center" />
           <TextBlock Text="{Binding EmptyMessage}" Classes="muted" FontSize="14" HorizontalAlignment="Center" />
         </StackPanel>
       </Panel>

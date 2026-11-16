@@ -12,6 +12,7 @@ public sealed class CliOptions
     public string? ConfigPath { get; }
     public string? ModsRoot { get; }
     public string? Tab { get; }
+    public string? Theme { get; }
     public CliMode Mode { get; }
 
     public CliOptions(string[] args)
@@ -29,6 +30,9 @@ public sealed class CliOptions
                     break;
                 case "--tab" or "-t":
                     Tab = Next(args, ref i);
+                    break;
+                case "--theme":
+                    Theme = Next(args, ref i);
                     break;
                 case "--scan" or "-s":
                     Mode = CliMode.Scan;
@@ -48,13 +52,14 @@ public sealed class CliOptions
         MX Bikes Mod Manager
 
         Usage:
-          MXBikesModManager [--config <appsettings.json>] [--mods <mods folder>] [--tab <key>]
+          MXBikesModManager [--config <appsettings.json>] [--mods <mods folder>] [--tab <key>] [--theme <name>]
           MXBikesModManager --scan [--config <path>] [--mods <mods folder>]
 
         Options:
           -c, --config   Path to appsettings.json (default: next to the app, then the repo root)
           -m, --mods     Override the mods folder for this run
           -t, --tab      Open on this mod type (bikes, tracks, tyres, rider, misc)
+              --theme    Override the theme for this run (ember, midnight, forest, violet, mono)
           -s, --scan     Scan the mods folder, print a summary and exit (no window)
           -h, --help     Show this help
         """;
