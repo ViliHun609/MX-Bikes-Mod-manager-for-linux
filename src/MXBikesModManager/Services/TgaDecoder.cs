@@ -110,16 +110,16 @@ public static class TgaDecoder
                 switch (baseType)
                 {
                     case 1 when palette is not null && colorMapEntrySize is 15 or 16 or 24 or 32:
-                    {
-                        var index = pixelBytes == 1 ? raw[src] : raw[src] | (raw[src + 1] << 8);
-                        var entryBytes = (colorMapEntrySize + 7) / 8;
-                        var pi = index * entryBytes;
-                        if (pi + entryBytes <= palette.Length)
                         {
-                            WriteColor(bgra, dst, palette, pi, colorMapEntrySize, true);
+                            var index = pixelBytes == 1 ? raw[src] : raw[src] | (raw[src + 1] << 8);
+                            var entryBytes = (colorMapEntrySize + 7) / 8;
+                            var pi = index * entryBytes;
+                            if (pi + entryBytes <= palette.Length)
+                            {
+                                WriteColor(bgra, dst, palette, pi, colorMapEntrySize, true);
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case 3:
                         bgra[dst] = raw[src];
                         bgra[dst + 1] = raw[src];

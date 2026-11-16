@@ -56,8 +56,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<ModTypeViewModel> Types { get; } = new();
 
-    public ConfigService Config => _config;
-
     [ObservableProperty]
     private ModTypeViewModel? _selectedType;
 
@@ -77,17 +75,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private bool _hasModsFolder;
 
     public string GameName => _config.Config.Game.Name;
-    public string DataFolder => _config.Data.Root;
 
     private ModTypeViewModel CreateTypeViewModel(ModTypeConfig type)
     {
         return new ModTypeViewModel(
             type,
             toggleHandler: HandleToggle,
-            removeHandler: HandleRemove,
             openInFileManager: OpenPath,
-            copyPath: CopyToClipboard,
-            status: text => Status = text)
+            copyPath: CopyToClipboard)
         {
             Owner = this,
             HideDisabled = _config.Config.Ui.HideDisabledByDefault,
@@ -168,11 +163,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             {
                 ct.ThrowIfCancellationRequested();
                 var typeVm = Types[i];
-                typeVm.IsScanning = true;
                 Status = $"Scanning {typeVm.Title} ({i + 1}/{Types.Count})…";
                 var result = await _scanner.ScanTypeAsync(typeVm.Type, ct);
                 typeVm.Load(result.Entries);
-                typeVm.IsScanning = false;
                 total += result.Entries.Count;
                 withPreview += result.WithPreview;
                 problems.AddRange(result.Problems);

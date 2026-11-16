@@ -60,7 +60,6 @@ public sealed class PkzInspector
 
             var ini = IniFile.Parse(text);
             var name = IniFile.Get(ini, "info", "name");
-            var shortName = IniFile.Get(ini, "info", "short_name");
             var author = IniFile.Get(ini, "ui", "author");
             var location = IniFile.Get(ini, "ui", "location");
             var discipline = IniFile.Get(ini, "ui", "discipline") ?? IniFile.Get(ini, "info", "discipline")
@@ -71,7 +70,6 @@ public sealed class PkzInspector
             return new ModInfo
             {
                 Name = name,
-                ShortName = shortName,
                 Author = author,
                 Location = location,
                 Discipline = discipline

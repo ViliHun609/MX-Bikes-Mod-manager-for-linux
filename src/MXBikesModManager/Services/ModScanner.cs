@@ -8,7 +8,6 @@ public sealed class ScanResult
 {
     public List<ModEntry> Entries { get; } = new();
     public List<string> Problems { get; } = new();
-    public int WithMetadata { get; set; }
     public int WithPreview { get; set; }
 }
 
@@ -163,7 +162,6 @@ public sealed class ModScanner
         }
 
         result.Entries.AddRange(entries.OrderBy(e => e.DisplayName, StringComparer.OrdinalIgnoreCase));
-        result.WithMetadata = entries.Count(e => e.Info is { IsEmpty: false });
         result.WithPreview = entries.Count(e => e.Preview is not null);
         return result;
     }
@@ -257,7 +255,6 @@ public sealed class ModScanner
                 return new ModInfo
                 {
                     Name = name,
-                    ShortName = IniFile.Get(ini, "info", "short_name"),
                     Author = author,
                     Location = location
                 };

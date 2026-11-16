@@ -43,7 +43,6 @@ public sealed partial class ModItemViewModel : ObservableObject
     public bool HasCategory => Category.Length > 0;
     public string KindLabel => Entry.Kind == ModKind.PkzArchive ? "PKZ" : "Folder";
     public string SizeText => PathUtil.FormatSize(Entry.SizeBytes);
-    public string PathText => Entry.Path;
     public string Monogram
     {
         get
@@ -95,7 +94,6 @@ public sealed partial class ModItemViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSubtitle));
         OnPropertyChanged(nameof(KindLabel));
         OnPropertyChanged(nameof(SizeText));
-        OnPropertyChanged(nameof(PathText));
         OnPropertyChanged(nameof(Monogram));
         OnPropertyChanged(nameof(TileOpacity));
     }

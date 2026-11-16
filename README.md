@@ -87,7 +87,7 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-107 tests cover scanning/pairing, name-based categories, toggling, installs (including
+108 tests cover scanning/pairing, name-based categories, toggling, installs (including
 zip-slip attempts, nested game layouts in archives and folders, type/subfolder
 suggestions and confirmation, rider-gear paint detection, paint targeting and backups),
 system-trash guards, themes and icon resolution, smooth-scroll maths, TGA decoding
@@ -111,7 +111,6 @@ repo root. The file is created automatically if it is missing.
   "data": { "root": "data" },
   "mods": {
     "disabledSuffix": ".disabled",
-    "scanDepth": 2,
     "computeSizes": true
   },
   "modTypes": [
@@ -126,9 +125,6 @@ repo root. The file is created automatically if it is missing.
     }
   ],
   "ui": {
-    "layout": "grid",
-    "tileWidth": 220,
-    "tileHeight": 190,
     "showPreviews": true,
     "hideDisabledByDefault": false,
     "smoothScrolling": true,
@@ -154,7 +150,6 @@ repo root. The file is created automatically if it is missing.
   wins), e.g. `{"name":"MX1 250/450","pattern":"^MX1OEM"}`. `defaultCategory` catches the
   rest; leave it empty to keep them uncategorised.
 - `installSubfolder` — where installs go (tracks → `tracks/Mods`).
-- `ui.tileWidth/tileHeight` — card size for the grid.
 
 Everything can also be changed in the in-app **Settings** dialog.
 
@@ -166,9 +161,8 @@ bikes/KTM_450SX/paints/…   → bikes/KTM_450SX.disabled/paints/…
 ```
 
 This is a rename on the same filesystem — instant, reversible, and safe for multi-GB
-packs. If the game ever turns out to still scan disabled folders, set
-`"disableStrategy": "moveToDisabledDir"` (reserved for a future mode) or simply keep the
-suffix and remove that folder from `scanSubfolders`.
+packs. If the game ever turns out to still scan disabled folders, remove that folder from
+`scanSubfolders`.
 
 > Close MX Bikes before toggling many mods; renaming files under a running game can
 > confuse its mod cache.
@@ -194,9 +188,10 @@ appsettings.json                  portable configuration
 src/MXBikesModManager/
   Models/       config + mod entry models
   Services/     SteamLocator, ModScanner, PkzInspector, TgaDecoder,
-                ThumbnailService, InstallService, ToggleService,
-                MetadataCache, ConfigService, LogService
-  ViewModels/   MainWindowViewModel, ModTypeViewModel, ModItemViewModel
+                ThumbnailService, InstallService, ToggleService, SystemTrashService,
+                MetadataCache, ConfigService, ThemeService, LogService
+  ViewModels/   MainWindowViewModel, ModTypeViewModel, ModItemViewModel, ThemeOptionViewModel
+  Behaviors/    SmoothScroll
   Views/        MainWindow, ModTypeView, Settings/InstallTarget/Message dialogs
   Assets/       icon (svg/png/ico)
 tests/MXBikesModManager.Tests/    xUnit test suite

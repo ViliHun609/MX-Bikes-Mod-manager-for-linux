@@ -7,7 +7,6 @@ namespace MXBikesModManager.Models;
 
 public sealed class AppConfig
 {
-    public int Version { get; set; } = 1;
     public GameConfig Game { get; set; } = new();
     public DataConfig Data { get; set; } = new();
     public ModsConfig Mods { get; set; } = new();
@@ -37,8 +36,6 @@ public sealed class DataConfig
 public sealed class ModsConfig
 {
     public string DisabledSuffix { get; set; } = ".disabled";
-    public string DisableStrategy { get; set; } = "renameSuffix";
-    public int ScanDepth { get; set; } = 2;
     public bool ComputeSizes { get; set; } = true;
 }
 
@@ -61,12 +58,14 @@ public sealed class ModTypeConfig
     /// <summary>Category for entries no rule matched. Empty means "leave uncategorised".</summary>
     public string DefaultCategory { get; set; } = string.Empty;
 
+    [JsonIgnore]
     public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Folder : Title;
 
     /// <summary>Vector icon for this type. Not serialised; <see cref="Icon"/> stores the key.</summary>
     [JsonIgnore]
     public Geometry IconGeometry => AppIcons.Resolve(Icon);
 
+    [JsonIgnore]
     public IEnumerable<string> SubfoldersToScan =>
         ScanSubfolders.Count > 0 ? ScanSubfolders : new[] { string.Empty };
 }
@@ -80,13 +79,8 @@ public sealed class CategoryRule
 
 public sealed class UiConfig
 {
-    public string Layout { get; set; } = "grid";
-    public double TileWidth { get; set; } = 230;
-    public double TileHeight { get; set; } = 200;
     public bool ShowPreviews { get; set; } = true;
-    public string DefaultSort { get; set; } = "name";
     public bool HideDisabledByDefault { get; set; }
-    public bool RememberWindow { get; set; } = true;
 
     /// <summary>Eased wheel scrolling in the mod grid.</summary>
     public bool SmoothScrolling { get; set; } = true;

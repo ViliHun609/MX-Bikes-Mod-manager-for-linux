@@ -9,15 +9,10 @@ public enum ModKind
 public sealed class ModInfo
 {
     public string? Name { get; set; }
-    public string? ShortName { get; set; }
     public string? Author { get; set; }
     public string? Location { get; set; }
     public string? Discipline { get; set; }
 
-    public bool IsEmpty =>
-        string.IsNullOrWhiteSpace(Name) &&
-        string.IsNullOrWhiteSpace(Author) &&
-        string.IsNullOrWhiteSpace(Location);
 }
 
 /// <summary>

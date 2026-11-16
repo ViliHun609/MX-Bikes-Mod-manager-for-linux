@@ -20,7 +20,7 @@ public class ModTypeViewModelTests
     };
 
     private static ModTypeViewModel ViewModel(ModTypeConfig type) =>
-        new(type, (_, _) => true, _ => true, _ => { }, _ => { }, _ => { });
+        new(type, (_, _) => true, _ => { }, _ => { });
 
     [Fact]
     public void Categories_are_sorted_by_count_and_filter_the_grid()

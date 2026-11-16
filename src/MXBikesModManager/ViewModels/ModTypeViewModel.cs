@@ -28,33 +28,15 @@ public sealed partial class CategoryFilterViewModel : ObservableObject
 public sealed partial class ModTypeViewModel : ObservableObject
 {
     private readonly Func<ModItemViewModel, bool, bool> _toggleHandler;
-    private readonly Action<string> _status;
 
     public ModTypeViewModel(
         ModTypeConfig type,
         Func<ModItemViewModel, bool, bool> toggleHandler,
-        Func<ModItemViewModel, bool> removeHandler,
         Action<string> openInFileManager,
-        Action<string> copyPath,
-        Action<string> status)
+        Action<string> copyPath)
     {
         Type = type;
         _toggleHandler = toggleHandler;
-        _status = status;
-        OpenInFileManager = new RelayCommand<string?>(path =>
-        {
-            if (!string.IsNullOrEmpty(path)) openInFileManager(path);
-        });
-        RemoveCommand = new RelayCommand<ModItemViewModel?>(item =>
-        {
-            if (item is not null && removeHandler(item))
-            {
-                AllItems.Remove(item);
-                FilteredItems.Remove(item);
-                ApplyFilter();
-            }
-        });
-
         Categories.Add(new CategoryFilterViewModel("All", isAll: true));
         _selectedCategory = Categories[0];
         _openInFileManager = openInFileManager;
@@ -75,9 +57,6 @@ public sealed partial class ModTypeViewModel : ObservableObject
     public Geometry IconGeometry => AppIcons.Resolve(Type.Icon);
     public bool HasCategories => Categories.Count > 1;
 
-    public RelayCommand<string?> OpenInFileManager { get; }
-    public RelayCommand<ModItemViewModel?> RemoveCommand { get; }
-
     [ObservableProperty]
     private string _searchText = string.Empty;
 
@@ -88,20 +67,12 @@ public sealed partial class ModTypeViewModel : ObservableObject
     private bool _smoothScrolling = true;
 
     [ObservableProperty]
-    private bool _isScanning;
-
-    [ObservableProperty]
     private CategoryFilterViewModel? _selectedCategory;
 
     [ObservableProperty]
     private string _sortMode = "Name";
 
-    [ObservableProperty]
-    private int _enabledCount;
-
     public int TotalCount => AllItems.Count;
-
-    public string CounterText => $"{EnabledCount}/{TotalCount} enabled";
 
     public IReadOnlyList<string> SortModes { get; } = new[] { "Name", "Name (Z-A)", "Category", "Largest", "Newest" };
 
@@ -188,9 +159,7 @@ public sealed partial class ModTypeViewModel : ObservableObject
 
     public void RecomputeCounts()
     {
-        EnabledCount = AllItems.Count(i => i.IsEnabled);
         OnPropertyChanged(nameof(TotalCount));
-        OnPropertyChanged(nameof(CounterText));
         if (Categories.Count > 0)
         {
             Categories[0].Count = AllItems.Count;
