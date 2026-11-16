@@ -10,7 +10,7 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] `--uninstall` moves config/data to a timestamped backup; `--purge` removes all
 - [x] Tested install / reinstall / uninstall / purge against a temporary HOME
 - [x] `INSTALL.md` checklist + README integration
-- [x] Commit this batch (`f0770d0` + installer commit)
+- [x] Commit this batch (`ab4a31a`)
 - [x] Rebuild AppImage (desktop entry categories changed)
 - [x] AppImage SHA-256:
       `89c390150a33d0bd162c75d1d4a4cc259bfb90fa8a591002f8523a34c28e0915`
