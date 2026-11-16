@@ -13,7 +13,7 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Move all hardcoded view colours to theme resources
 - [x] Unit tests for palettes, fallback, config round-trip
 - [x] Verify the theme engine + cards visually (Midnight/Violet); no further GUI runs per request
-- [ ] Commit the theme work
+- [x] Commit the theme work (`5709daa`)
 
 ## Icons
 
@@ -26,14 +26,15 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Icons on the theme cards
 - [x] Unit tests for icon resolution/fallback
 - [x] Verify icons visually in the tabs and theme cards
-- [ ] Commit the icon work
+- [x] Commit the icon work (`5709daa`)
 
 ## Release
 
 - [x] Run the full test suite (76 passing)
-- [ ] Rebuild `dist/MXBikesModManager-x86_64.AppImage`
-- [ ] Record the new SHA-256
+- [x] Rebuild `dist/MXBikesModManager-x86_64.AppImage`
+- [x] Record the new SHA-256: `5345b5636923826ea8dddaffb3e72bef303273d18e7cd0b649331f8476bc7848`
 - [x] Update README (themes + icons + test count)
+- [x] Smoke-test the AppImage with `--scan` and `--help`
 
 ## Known leftovers / notes
 
