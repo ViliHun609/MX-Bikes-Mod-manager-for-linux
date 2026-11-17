@@ -10,7 +10,8 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] GitHub Actions release workflow (tag → AppImage + bundle + checksums)
 - [x] Standalone installer works from the extracted release bundle
 - [x] Local release bundle tested end-to-end
-- [x] Keep saved `appsettings.json` stable (trailing newline; serialized shape committed)
+- [x] Keep saved `appsettings.json` stable (trailing newline)
+- [x] Stop tracking user-specific `appsettings.json`; add sanitized `appsettings.example.json`
 - [x] Rebuilt the 0.2.0 AppImage
 - [x] AppImage SHA-256:
       `20603a484d4d57a5d1a5ece260812d8c6211cf3a7791ed61a12339d91fff0e4f`
