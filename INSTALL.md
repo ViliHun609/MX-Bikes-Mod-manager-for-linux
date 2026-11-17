@@ -40,7 +40,7 @@ separately; place them in the same folder before running the installer.
   ```
 
 - [ ] Confirm the app was copied to `~/.local/opt/mxbikes-mod-manager/`.
-- [ ] Confirm `appsettings.json` and `data/` were carried over.
+- [ ] Confirm `appsettings.json` and `data/` were carried over, if present. (Fresh installs create them on first launch.)
 - [ ] Confirm the icon and launcher exist:
   - `~/.local/share/icons/hicolor/512x512/apps/mxbikes-mod-manager.png`
   - `~/.local/share/applications/mxbikes-mod-manager.desktop`
@@ -65,7 +65,7 @@ Live updates are intentionally not configured. To update:
   scripts/install-desktop.sh --appimage /path/to/MXBikesModManager-x86_64.AppImage
   ```
 
-- [ ] Confirm the AppImage was replaced but `appsettings.json` and `data/` were kept.
+- [ ] Confirm the AppImage was replaced but `appsettings.json` and `data/` were kept, if present.
 - [ ] Relaunch the app.
 
 ## Publishing a release
@@ -96,7 +96,7 @@ Live updates are intentionally not configured. To update:
 ## Manual install (without the script)
 
 - [ ] Copy the AppImage somewhere stable, e.g. `~/.local/opt/mxbikes-mod-manager/`.
-- [ ] Copy `appsettings.json` and `data/` beside it.
+- [ ] Copy `appsettings.json` and `data/` beside it, if you want to carry over an existing profile.
 - [ ] Copy `src/MXBikesModManager/Assets/icon.png` to
       `~/.local/share/icons/hicolor/512x512/apps/mxbikes-mod-manager.png`.
 - [ ] Create `~/.local/share/applications/mxbikes-mod-manager.desktop` with:

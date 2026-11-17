@@ -125,6 +125,10 @@ detection.
 Lookup order: `--config <path>` → next to the AppImage/executable → current directory →
 repo root. The file is created automatically if it is missing.
 
+A sanitized template is tracked as [`appsettings.example.json`](appsettings.example.json).
+`appsettings.json` itself is gitignored and is created on first launch (or copy the
+example if you want to customise it before starting).
+
 ```json
 {
   "game": {
@@ -214,9 +218,10 @@ scripts/build-appimage.sh
 scripts/install-desktop.sh
 ```
 
-This copies the AppImage, `appsettings.json` and `data/` into
-`~/.local/opt/mxbikes-mod-manager/`, installs the icon and a `.desktop` launcher, and
-refreshes the desktop/icon caches. No root is required.
+This copies the AppImage into `~/.local/opt/mxbikes-mod-manager/`, along with
+`appsettings.json` and `data/` when they exist in the source checkout. It installs the
+icon and a `.desktop` launcher, and refreshes the desktop/icon caches. No root is
+required. Fresh installations create `appsettings.json` and `data/` on first launch.
 
 - `--appimage <path>` installs a different build.
 - `--uninstall` removes the launcher and AppImage and moves config/data to a timestamped backup.
@@ -234,7 +239,8 @@ release. Live updates are intentionally not enabled yet.
 INSTALL.md                        desktop install / update checklist
 LICENSE                           MIT license
 THIRD-PARTY-NOTICES.md            dependency and icon licenses
-appsettings.json                  portable configuration
+appsettings.example.json          tracked configuration template
+appsettings.json                  local config (gitignored, created on first launch)
 src/MXBikesModManager/
   Models/       config + mod entry models
   Services/     SteamLocator, ModScanner, PkzInspector, TgaDecoder,
