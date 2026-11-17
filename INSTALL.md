@@ -5,7 +5,7 @@ release or build from source.
 
 ## Option A — install a release (recommended)
 
-- [ ] Open the repository's **Releases** page.
+- [ ] Open the [latest release](https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/releases/latest).
 - [ ] Download `MXBikesModManager-*-linux-x86_64.tar.gz`.
 - [ ] Extract it.
 - [ ] Run the installer from the extracted folder:

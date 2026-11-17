@@ -1,5 +1,7 @@
 # MX Bikes Mod Manager (Linux)
 
+[![CI](https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/actions/workflows/ci.yml/badge.svg)](https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/actions/workflows/ci.yml)
+
 A native Linux mod manager for [MX Bikes](https://store.steampowered.com/app/655500/) —
 built with **Avalonia UI** and **.NET 10**. It reads the game's mods folder directly out of
 the Proton prefix, shows every mod as a card grid per type, and enables/disables mods
@@ -7,7 +9,7 @@ instantly by renaming them in place.
 
 ## Download & install
 
-1. Open the repository's **Releases** page on GitHub.
+1. Open the [latest release](https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/releases/latest).
 2. Download `MXBikesModManager-*-linux-x86_64.tar.gz`.
 3. Extract it and run:
 
@@ -24,6 +26,9 @@ troubleshooting.
 
 Automatic/live updates are not configured. To update, download a newer release and run
 the installer again; your config and data are preserved.
+
+Release page:
+<https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/releases>
 
 ![Screenshot](docs/screenshot.png)
 

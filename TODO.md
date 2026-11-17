@@ -15,8 +15,9 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] AppImage SHA-256:
       `20603a484d4d57a5d1a5ece260812d8c6211cf3a7791ed61a12339d91fff0e4f`
 - [x] User final review, then commit
-- [ ] Create GitHub repo, push `main`, push tag `v0.2.0`
-- [ ] Confirm the Release workflow assets download and install
+- [x] Create GitHub repo, push `main`, push tag `v0.2.0`
+- [x] Confirm the Release workflow assets download and install
+- [x] Make the repository public; anonymous download verified
 
 ## Desktop install + checklist
 
