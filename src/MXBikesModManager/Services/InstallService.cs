@@ -840,41 +840,29 @@ public sealed class InstallService
         var candidates = new Dictionary<string, (ModTypeConfig Type, int Index, int Matches)>(
             StringComparer.OrdinalIgnoreCase);
 
-        foreach (var key in keys)
+        // A candidate prefix is only valid when every file deeper than the type segment
+        // shares it. Group the keys per depth instead of comparing every key against every
+        // candidate prefix — the old nested loop was O(files²) on large archives.
+        for (var depth = 0; depth <= 3; depth++)
         {
-            var segments = key.Split('/');
-            for (var i = 0; i < segments.Length - 1 && i <= 3; i++)
+            var groups = new Dictionary<string, (ModTypeConfig? Type, int Matches)>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var key in keys)
             {
-                var type = ResolveType(segments[i]);
-                if (type is null) continue;
+                var segments = key.Split('/');
+                if (segments.Length <= depth + 1) continue;
 
-                var prefixSegments = segments.Take(i + 1).ToArray();
-                var prefix = string.Join('/', prefixSegments);
-
-                var matches = 0;
-                var conflict = false;
-
-                foreach (var other in keys)
-                {
-                    var otherSegments = other.Split('/');
-                    if (otherSegments.Length <= i + 1) continue;
-
-                    if (!otherSegments.Take(i + 1).SequenceEqual(prefixSegments, StringComparer.OrdinalIgnoreCase))
-                    {
-                        conflict = true;
-                        break;
-                    }
-
-                    matches++;
-                }
-
-                if (conflict || matches == 0) continue;
-
-                if (!candidates.TryGetValue(prefix, out var existing) || matches > existing.Matches)
-                {
-                    candidates[prefix] = (type, i, matches);
-                }
+                var prefix = string.Join('/', segments.Take(depth + 1));
+                groups[prefix] = groups.TryGetValue(prefix, out var group)
+                    ? (group.Type, group.Matches + 1)
+                    : (ResolveType(segments[depth]), 1);
             }
+
+            if (groups.Count != 1) continue;
+
+            var only = groups.Single();
+            if (only.Value.Type is null) continue;
+            candidates[only.Key] = (only.Value.Type, depth, only.Value.Matches);
         }
 
         if (candidates.Count == 0) return null;

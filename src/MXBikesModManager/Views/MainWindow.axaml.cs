@@ -134,7 +134,7 @@ public partial class MainWindow : Window, IUiInteraction
                 {
                     new FilePickerFileType("MX Bikes mods")
                     {
-                        Patterns = new[] { "*.zip", "*.7z", "*.rar", "*.pkz", "*.tar", "*.gz", "*.tgz" }
+                        Patterns = new[] { "*.zip", "*.7z", "*.rar", "*.pkz", "*.tar", "*.gz", "*.tgz", "*.bz2", "*.xz" }
                     },
                     new FilePickerFileType("All files") { Patterns = new[] { "*" } }
                 }
@@ -151,26 +151,6 @@ public partial class MainWindow : Window, IUiInteraction
             _config.Log.Error("File picker failed", ex);
             _viewModel.Status = $"Could not open the file picker: {ex.Message}";
             return Array.Empty<string>();
-        }
-    }
-
-    public async Task<string?> PickModsFolderAsync()
-    {
-        try
-        {
-            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-            {
-                Title = "Select the MX Bikes mods folder",
-                AllowMultiple = false
-            });
-
-            return folders.Select(f => f.TryGetLocalPath()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
-        }
-        catch (Exception ex)
-        {
-            _config.Log.Error("Folder picker failed", ex);
-            _viewModel.Status = $"Could not open the folder picker: {ex.Message}";
-            return null;
         }
     }
 

@@ -82,7 +82,7 @@ Release page:
   native touchpad inertia. Toggle it under **Settings → Smooth scrolling**.
 - **Auto-detection** — finds the prefix via `libraryfolders.vdf` across native Steam
   libraries and Flatpak Steam; manual folder picker if that fails.
-- **Portable** — config, cache, thumbnails, backups and logs all live inside this repo
+- **Portable** — config, cache, backups and logs all live inside this repo
   (or next to the AppImage), never in `~/.config`.
 - **AppImage build** with `scripts/build-appimage.sh`.
 
@@ -113,12 +113,13 @@ dotnet run --project src/MXBikesModManager -- --help
 dotnet test
 ```
 
-108 tests cover scanning/pairing, name-based categories, toggling, installs (including
-zip-slip attempts, nested game layouts in archives and folders, type/subfolder
+115 tests cover scanning/pairing, name-based categories, toggling (including paired
+folders that were toggled outside the app and previews surviving a rename), installs
+(including zip-slip attempts, nested game layouts in archives and folders, type/subfolder
 suggestions and confirmation, rider-gear paint detection, paint targeting and backups),
-system-trash guards, themes and icon resolution, smooth-scroll maths, TGA decoding
-(uncompressed + RLE), PiBoSo INI metadata, the metadata cache, and Steam/Proton prefix
-detection.
+bulk actions, system-trash guards and category names with slashes, themes and icon
+resolution, smooth-scroll maths, TGA decoding (uncompressed + RLE), PiBoSo INI metadata,
+the metadata cache, and Steam/Proton prefix detection.
 
 ## Configuration (`appsettings.json`)
 
@@ -287,12 +288,12 @@ To publish a release, bump `<Version>` in `MXBikesModManager.csproj`, commit it,
 push a matching tag:
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 The `Release` workflow validates the tag/version, builds the AppImage, creates the
-`MXBikesModManager-0.2.0-linux-x86_64.tar.gz` bundle and attaches the assets plus
+`MXBikesModManager-0.2.1-linux-x86_64.tar.gz` bundle and attaches the assets plus
 `SHA256SUMS` to the GitHub release.
 
 ## License

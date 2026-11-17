@@ -12,7 +12,6 @@ public sealed class ModInfo
     public string? Author { get; set; }
     public string? Location { get; set; }
     public string? Discipline { get; set; }
-
 }
 
 /// <summary>
@@ -37,7 +36,6 @@ public sealed class PreviewSource
 
 public sealed class ModEntry
 {
-    public required string Name { get; init; }
     public required ModTypeConfig Type { get; init; }
     public string Category { get; init; } = string.Empty;
     public required ModKind Kind { get; init; }
@@ -48,7 +46,6 @@ public sealed class ModEntry
     public string? PairedFolderPath { get; set; }
     public bool IsEnabled { get; set; } = true;
     public long SizeBytes { get; set; }
-    public bool SizeKnown { get; set; }
     public ModInfo? Info { get; set; }
     public PreviewSource? Preview { get; set; }
 

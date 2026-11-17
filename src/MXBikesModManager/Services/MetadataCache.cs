@@ -12,6 +12,7 @@ public sealed class MetadataCache
     private readonly string _file;
     private readonly LogService _log;
     private readonly object _gate = new();
+    private readonly HashSet<string> _usedKeys = new(StringComparer.Ordinal);
     private Dictionary<string, CachedEntry> _entries = new(StringComparer.Ordinal);
     private bool _dirty;
 
@@ -30,6 +31,7 @@ public sealed class MetadataCache
         {
             if (_entries.TryGetValue(key, out var entry))
             {
+                _usedKeys.Add(key);
                 info = entry.Info;
                 preview = entry.Preview switch
                 {
@@ -64,6 +66,7 @@ public sealed class MetadataCache
                         FilePath = preview.FilePath
                     }
             };
+            _usedKeys.Add(key);
             _dirty = true;
         }
     }
@@ -74,6 +77,18 @@ public sealed class MetadataCache
         {
             if (!_dirty) return;
             _dirty = false;
+
+            // A scan touches every mod it still finds, so anything else is stale (removed,
+            // renamed or replaced mods). Drop it instead of letting the cache grow forever.
+            if (_usedKeys.Count > 0)
+            {
+                foreach (var stale in _entries.Keys.Where(key => !_usedKeys.Contains(key)).ToList())
+                {
+                    _entries.Remove(stale);
+                }
+                _usedKeys.Clear();
+            }
+
             try
             {
                 var json = JsonSerializer.Serialize(_entries, new JsonSerializerOptions { WriteIndented = false });

@@ -49,9 +49,12 @@ public sealed class PkzInspector
             string text;
             try
             {
+                // Only read a bounded prefix: entry.Length is attacker-controlled and a
+                // "zip bomb" .ini must not be able to allocate unbounded memory.
                 using var reader = new StreamReader(entry.Open());
-                text = reader.ReadToEnd();
-                if (text.Length > 64 * 1024) text = text[..(64 * 1024)];
+                var buffer = new char[64 * 1024];
+                var read = reader.ReadBlock(buffer, 0, buffer.Length);
+                text = new string(buffer, 0, read);
             }
             catch (Exception)
             {

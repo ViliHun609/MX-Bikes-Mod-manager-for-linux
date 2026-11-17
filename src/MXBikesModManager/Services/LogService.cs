@@ -23,8 +23,6 @@ public sealed class LogService
         catch (IOException) { }
     }
 
-    public event Action<string>? Written;
-
     public void Info(string message) => Write("INFO", message);
     public void Warn(string message) => Write("WARN", message);
     public void Error(string message, Exception? ex = null)
@@ -42,6 +40,5 @@ public sealed class LogService
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         }
-        Written?.Invoke(line);
     }
 }

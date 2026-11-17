@@ -126,8 +126,12 @@ public static class TgaDecoder
                         bgra[dst + 2] = raw[src];
                         bgra[dst + 3] = 255;
                         break;
-                    default:
+                    case 2 when bpp is 15 or 16 or 24 or 32:
                         WriteColor(bgra, dst, raw, src, bpp, alphaBits > 0);
+                        break;
+                    default:
+                        // Unsupported/malformed pixel depth: leave the pixel transparent
+                        // instead of reading past the end of the raw buffer.
                         break;
                 }
             }

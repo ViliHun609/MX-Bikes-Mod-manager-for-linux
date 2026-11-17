@@ -226,10 +226,7 @@ public partial class InstallTargetWindow : Window
         }
         else if (_plan.IsDirectCopy)
         {
-            TargetText.Text = $"Target: {root}/{Path.GetFileName(_plan.SourcePath)}";
-        }
-        else if (_plan.IsFolderCopy)
-        {
+            // Direct copies and whole-folder copies share the "source name under the type root" shape.
             var name = Path.GetFileName(_plan.SourcePath.TrimEnd(Path.DirectorySeparatorChar));
             TargetText.Text = $"Target: {root}/{name}";
         }

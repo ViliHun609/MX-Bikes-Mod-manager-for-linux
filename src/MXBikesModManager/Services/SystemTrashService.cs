@@ -174,7 +174,23 @@ public sealed class SystemTrashService : ITrashService
         {
             if (string.IsNullOrWhiteSpace(dir)) continue;
             var candidate = Path.Combine(dir, name);
-            if (File.Exists(candidate)) return true;
+            if (!File.Exists(candidate)) continue;
+
+            if (OperatingSystem.IsWindows()) return true;
+
+            try
+            {
+                var mode = File.GetUnixFileMode(candidate);
+                if ((mode & (UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)) != 0)
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                // Not a Unix filesystem; fall back to the existence check.
+                return true;
+            }
         }
 
         return false;
@@ -188,7 +204,6 @@ public sealed class SystemTrashService : ITrashService
             {
                 UseShellExecute = false,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true,
                 CreateNoWindow = true
             };
 

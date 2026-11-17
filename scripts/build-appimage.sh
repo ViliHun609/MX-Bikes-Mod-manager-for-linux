@@ -60,7 +60,14 @@ find_appimagetool() {
   if [[ ! -x "$cached" ]]; then
     echo "==> Downloading appimagetool" >&2
     curl -fsSL -o "$cached" \
-      "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+      "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+
+    # Optional integrity check: export the checksum you reviewed, e.g.
+    #   APPIMAGETOOL_SHA256=e8c1169c... ./scripts/build-appimage.sh
+    if [[ -n "${APPIMAGETOOL_SHA256:-}" ]]; then
+      echo "$APPIMAGETOOL_SHA256  $cached" | sha256sum -c -
+    fi
+
     chmod +x "$cached"
   fi
   echo "$cached"

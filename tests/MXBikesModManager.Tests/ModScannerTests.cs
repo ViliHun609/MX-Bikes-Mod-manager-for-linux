@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using MXBikesModManager.Services;
 using Xunit;
 
@@ -130,6 +131,41 @@ public class ModScannerTests
         // Even though the catch-all rule matches, the scan subfolder category wins.
         Assert.Equal("Helmets", result.Entries.Single(e => e.BaseName == "Helmet_A").Category);
         Assert.Equal("Riders", result.Entries.Single(e => e.BaseName == "Rider_B").Category);
+    }
+
+    [Fact]
+    public async Task Cached_preview_follows_the_archive_when_the_mod_is_toggled()
+    {
+        using var env = new TestEnvironment();
+        var path = Path.Combine(env.ModsRoot, "bikes", "Preview_Bike.pkz");
+        using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
+        {
+            using (var ini = new StreamWriter(zip.CreateEntry("bike/bike.ini").Open()))
+            {
+                ini.Write("[info]\nname = Preview Bike\n");
+            }
+            using var image = zip.CreateEntry("bike/capa.png").Open();
+            image.Write(new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+        }
+
+        var (scanner, cache) = Create(env);
+        var first = await scanner.ScanTypeAsync(env.Type("bikes"), CancellationToken.None);
+        var entry = first.Entries.Single(e => e.BaseName == "Preview_Bike");
+        Assert.NotNull(entry.Preview);
+        Assert.EndsWith("Preview_Bike.pkz", entry.Preview!.ArchivePath);
+        cache.SaveIfDirty();
+
+        Assert.True(new ToggleService(env.Config).SetEnabled(entry, false).Success);
+
+        // A fresh scan (cache reloaded from disk) must not point at the old, missing path.
+        var (scanner2, _) = Create(env);
+        var second = await scanner2.ScanTypeAsync(env.Type("bikes"), CancellationToken.None);
+        var disabled = second.Entries.Single(e => e.BaseName == "Preview_Bike");
+
+        Assert.False(disabled.IsEnabled);
+        Assert.NotNull(disabled.Preview);
+        Assert.EndsWith("Preview_Bike.pkz.disabled", disabled.Preview!.ArchivePath);
+        Assert.True(File.Exists(disabled.Preview.ArchivePath));
     }
 
     [Theory]

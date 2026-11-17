@@ -78,8 +78,8 @@ public sealed partial class ModItemViewModel : ObservableObject
         ToggleRequested?.Invoke(this, value);
     }
 
-    /// <summary>Restores the checkbox state without triggering another rename.</summary>
-    public void RevertEnabled(bool enabled)
+    /// <summary>Sets the checkbox state without triggering another rename (e.g. after a bulk action).</summary>
+    public void SyncEnabled(bool enabled)
     {
         _syncing = true;
         IsEnabled = enabled;

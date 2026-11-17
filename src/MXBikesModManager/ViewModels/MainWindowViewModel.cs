@@ -81,7 +81,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         return new ModTypeViewModel(
             type,
             toggleHandler: HandleToggle,
-            openInFileManager: OpenPath,
+            openInFileManager: path => OpenPath(path),
             copyPath: CopyToClipboard)
         {
             Owner = this,
@@ -114,7 +114,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Status = result.Message;
         if (!result.Success)
         {
-            item.RevertEnabled(!enabled);
+            item.SyncEnabled(!enabled);
             return false;
         }
 
@@ -131,9 +131,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var result = _toggle.MoveToTrash(item.Entry);
         Status = result.Message;
-        if (!result.Success) return false;
-        UpdateSummary();
-        return true;
+        return result.Success;
     }
 
     public async Task RefreshAsync()
@@ -331,33 +329,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task EnableSelected()
-    {
-        var items = Types.SelectMany(t => t.SelectedItems).ToList();
-        if (items.Count == 0)
-        {
-            Status = "Select mods first (checkbox on a tile, or “Select all”).";
-            return;
-        }
-
-        await Task.Run(() =>
-        {
-            foreach (var item in items)
-            {
-                if (item.IsEnabled) continue;
-                var result = _toggle.SetEnabled(item.Entry, true);
-                if (!result.Success) _log.Warn(result.Message);
-            }
-        });
-
-        foreach (var item in items) { item.RefreshDetails(); }
-        foreach (var typeVm in Types) typeVm.RecomputeCounts();
-        UpdateSummary();
-        Status = $"Enabled {items.Count} mods.";
-    }
+    private Task EnableSelected() => SetSelectedEnabled(true, "Enabled");
 
     [RelayCommand]
-    private async Task DisableSelected()
+    private Task DisableSelected() => SetSelectedEnabled(false, "Disabled");
+
+    private async Task SetSelectedEnabled(bool enabled, string verb)
     {
         var items = Types.SelectMany(t => t.SelectedItems).ToList();
         if (items.Count == 0)
@@ -366,20 +343,50 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        var done = 0;
+        var failed = 0;
+
         await Task.Run(() =>
         {
             foreach (var item in items)
             {
-                if (!item.IsEnabled) continue;
-                var result = _toggle.SetEnabled(item.Entry, false);
-                if (!result.Success) _log.Warn(result.Message);
+                // Compare against the on-disk state, not the checkbox, so bulk actions
+                // still work after an earlier bulk toggle left the UI stale.
+                if (item.Entry.IsEnabled == enabled)
+                {
+                    done++;
+                    continue;
+                }
+
+                var result = _toggle.SetEnabled(item.Entry, enabled);
+                if (result.Success)
+                {
+                    done++;
+                }
+                else
+                {
+                    failed++;
+                    _log.Warn(result.Message);
+                }
             }
         });
 
-        foreach (var item in items) { item.RefreshDetails(); }
-        foreach (var typeVm in Types) typeVm.RecomputeCounts();
+        foreach (var item in items)
+        {
+            item.SyncEnabled(item.Entry.IsEnabled);
+            item.RefreshDetails();
+        }
+
+        foreach (var typeVm in Types)
+        {
+            typeVm.ApplyFilter();
+            typeVm.RecomputeCounts();
+        }
+
         UpdateSummary();
-        Status = $"Disabled {items.Count} mods.";
+        Status = failed == 0
+            ? $"{verb} {done} mods."
+            : $"{verb} {done} mods; {failed} failed (see log).";
     }
 
     [RelayCommand]
@@ -398,21 +405,29 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Move to trash");
         if (!confirmed) return;
 
+        var removed = new List<ModItemViewModel>();
+        var failed = 0;
+
         foreach (var item in items)
         {
-            HandleRemove(item);
+            if (HandleRemove(item)) removed.Add(item);
+            else failed++;
         }
 
         foreach (var typeVm in Types)
         {
-            foreach (var item in items.Where(i => typeVm.AllItems.Contains(i)).ToList())
+            foreach (var item in removed.Where(typeVm.AllItems.Contains).ToList())
             {
                 typeVm.AllItems.Remove(item);
             }
             typeVm.ApplyFilter();
             typeVm.RecomputeCounts();
         }
+
         UpdateSummary();
+        Status = failed == 0
+            ? $"Moved {removed.Count} mods to data/trash."
+            : $"Moved {removed.Count} mods to data/trash; {failed} failed (see log).";
     }
 
     [RelayCommand]
@@ -451,23 +466,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void LaunchGame()
     {
-        var uri = _config.Config.Game.LaunchUri;
-        try
+        if (OpenPath(_config.Config.Game.LaunchUri))
         {
-            OpenPath(uri);
             Status = $"Launching {GameName}…";
-        }
-        catch (Exception ex)
-        {
-            _log.Error("Could not launch game", ex);
-            Status = $"Could not launch game: {ex.Message}";
         }
     }
 
     [RelayCommand]
     private void OpenLogs() => OpenPath(_config.Data.Logs);
 
-    public void OpenPath(string path)
+    /// <summary>Opens a path/URI with xdg-open. Returns false when it could not be started.</summary>
+    public bool OpenPath(string path)
     {
         try
         {
@@ -478,11 +487,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
             };
             process.ArgumentList.Add(path);
             Process.Start(process);
+            return true;
         }
         catch (Exception ex)
         {
             _log.Error($"Could not open {path}", ex);
             Status = $"Could not open: {ex.Message}";
+            return false;
         }
     }
 

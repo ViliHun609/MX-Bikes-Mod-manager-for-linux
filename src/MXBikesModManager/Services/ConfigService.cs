@@ -7,14 +7,13 @@ public sealed class DataPaths
 {
     public required string Root { get; init; }
     public required string Cache { get; init; }
-    public required string Thumbs { get; init; }
     public required string Logs { get; init; }
     public required string Backups { get; init; }
     public required string Trash { get; init; }
 
     public void EnsureCreated()
     {
-        foreach (var dir in new[] { Root, Cache, Thumbs, Logs, Backups, Trash })
+        foreach (var dir in new[] { Root, Cache, Logs, Backups, Trash })
         {
             Directory.CreateDirectory(dir);
         }
@@ -126,7 +125,8 @@ public sealed class ConfigService
 
     public bool Save()
     {
-        Config.Game.ModsRoot = Config.Game.ModsRoot.Trim();
+        // Deserialized JSON can set null even though the property is non-nullable.
+        Config.Game.ModsRoot = Config.Game.ModsRoot?.Trim() ?? string.Empty;
         return TryWrite(ConfigPath);
     }
 
@@ -161,7 +161,6 @@ public sealed class ConfigService
         {
             Root = root,
             Cache = Sub(Config.Data.Cache),
-            Thumbs = Sub(Config.Data.Thumbs),
             Logs = Sub(Config.Data.Logs),
             Backups = Sub(Config.Data.Backups),
             Trash = Sub(Config.Data.Trash)

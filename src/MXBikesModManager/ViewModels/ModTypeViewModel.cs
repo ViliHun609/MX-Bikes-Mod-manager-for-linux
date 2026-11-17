@@ -19,6 +19,7 @@ public sealed partial class CategoryFilterViewModel : ObservableObject
     public bool IsAll { get; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CountText))]
     private int _count;
 
     public string DisplayName => IsAll ? "All" : Name;
@@ -160,9 +161,15 @@ public sealed partial class ModTypeViewModel : ObservableObject
     public void RecomputeCounts()
     {
         OnPropertyChanged(nameof(TotalCount));
-        if (Categories.Count > 0)
+        if (Categories.Count == 0) return;
+
+        // Category chips are ordered by count when loaded, so keep their numbers current
+        // after toggles/removals instead of leaving the initial counts on screen.
+        Categories[0].Count = AllItems.Count;
+        foreach (var category in Categories.Skip(1))
         {
-            Categories[0].Count = AllItems.Count;
+            category.Count = AllItems.Count(i =>
+                string.Equals(i.Category, category.Name, StringComparison.OrdinalIgnoreCase));
         }
     }
 

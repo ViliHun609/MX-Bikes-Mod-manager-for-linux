@@ -10,7 +10,6 @@ public class ModTypeViewModelTests
 
     private static ModEntry Entry(ModTypeConfig type, string baseName, string category, long size = 0) => new()
     {
-        Name = baseName,
         BaseName = baseName,
         Type = type,
         Kind = ModKind.PkzArchive,
@@ -67,6 +66,34 @@ public class ModTypeViewModelTests
         Assert.Equal(
             new[] { "85cc", "MX1", "Other" },
             vm.FilteredItems.Select(i => i.Category));
+    }
+
+    [Fact]
+    public void Count_changes_notify_the_chip_text_and_recompute_updates_each_category()
+    {
+        var category = new CategoryFilterViewModel("MX1");
+        var raised = new List<string?>();
+        category.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        category.Count = 5;
+
+        Assert.Equal("5", category.CountText);
+        Assert.Contains(nameof(CategoryFilterViewModel.CountText), raised);
+
+        var type = Type();
+        var vm = ViewModel(type);
+        vm.Load(new[]
+        {
+            Entry(type, "mx1_a", "MX1"),
+            Entry(type, "mx1_b", "MX1"),
+            Entry(type, "other", "Other")
+        });
+
+        vm.AllItems.Remove(vm.AllItems.Single(i => i.BaseName == "mx1_b"));
+        vm.RecomputeCounts();
+
+        Assert.Equal(2, vm.Categories[0].Count);
+        Assert.Equal(1, vm.Categories.Single(c => c.Name == "MX1").Count);
     }
 
     [Fact]

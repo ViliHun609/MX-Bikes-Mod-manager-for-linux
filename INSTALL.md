@@ -72,7 +72,7 @@ Live updates are intentionally not configured. To update:
 
 - [ ] Bump `<Version>` in `src/MXBikesModManager/MXBikesModManager.csproj`.
 - [ ] Commit the version bump.
-- [ ] Push a matching tag, for example `v0.2.0`.
+- [ ] Push a matching tag, for example `v0.2.1`.
 - [ ] Confirm the `Release` workflow built the AppImage + bundle and attached them to the
       GitHub release.
 - [ ] Download the release assets yourself and run the installer once as a smoke test.

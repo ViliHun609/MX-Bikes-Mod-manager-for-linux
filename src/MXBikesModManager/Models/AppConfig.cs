@@ -27,7 +27,6 @@ public sealed class DataConfig
 {
     public string Root { get; set; } = "data";
     public string Cache { get; set; } = "cache";
-    public string Thumbs { get; set; } = "thumbs";
     public string Logs { get; set; } = "logs";
     public string Backups { get; set; } = "backups";
     public string Trash { get; set; } = "trash";

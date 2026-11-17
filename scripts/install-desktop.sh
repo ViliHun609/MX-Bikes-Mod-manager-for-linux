@@ -6,7 +6,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR"
 # Repo layout: scripts/install-desktop.sh -> repo root. Release bundle: script at root.
-if [[ ! -f "$ROOT/appsettings.json" && -f "$SCRIPT_DIR/../appsettings.json" ]]; then
+# Detect a source checkout by its solution file (appsettings.json is gitignored and
+# therefore absent in a fresh clone).
+if [[ ! -f "$ROOT/MXBikesModManager.slnx" && -f "$SCRIPT_DIR/../MXBikesModManager.slnx" ]]; then
   ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 

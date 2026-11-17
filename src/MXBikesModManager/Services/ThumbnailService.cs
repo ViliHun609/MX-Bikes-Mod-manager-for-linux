@@ -14,9 +14,11 @@ namespace MXBikesModManager.Services;
 public sealed class ThumbnailService
 {
     private const int MaxDimension = 640;
+    private const int MaxCachedPreviews = 128;
 
     private readonly LogService _log;
     private readonly Dictionary<string, Bitmap?> _cache = new(StringComparer.Ordinal);
+    private readonly Queue<string> _cacheOrder = new();
 
     public ThumbnailService(LogService log) => _log = log;
 
@@ -40,7 +42,20 @@ public sealed class ThumbnailService
 
         lock (_cache)
         {
+            var isNew = !_cache.ContainsKey(key);
             _cache[key] = bitmap;
+
+            if (isNew)
+            {
+                _cacheOrder.Enqueue(key);
+
+                // Evict oldest entries without disposing: tiles may still be showing the
+                // bitmap, and the GC can reclaim it once the UI drops the last reference.
+                while (_cacheOrder.Count > MaxCachedPreviews)
+                {
+                    _cache.Remove(_cacheOrder.Dequeue());
+                }
+            }
         }
 
         return bitmap;

@@ -19,47 +19,58 @@ public sealed class ToggleService
     public OperationResult SetEnabled(ModEntry entry, bool enabled)
     {
         var primaryTarget = Adjust(entry.Path, enabled);
-        var pairedTarget = entry.PairedFolderPath is null ? null : Adjust(entry.PairedFolderPath, enabled);
+        var primaryNeedsMove = !PathsEqual(entry.Path, primaryTarget);
 
-        if (PathsEqual(entry.Path, primaryTarget) &&
-            (pairedTarget is null || PathsEqual(entry.PairedFolderPath!, pairedTarget)))
+        var pairedSource = entry.PairedFolderPath;
+        var pairedTarget = pairedSource is null ? null : Adjust(pairedSource, enabled);
+        var pairedNeedsMove = pairedSource is not null &&
+                              pairedTarget is not null &&
+                              !PathsEqual(pairedSource, pairedTarget);
+
+        if (!primaryNeedsMove && !pairedNeedsMove)
         {
+            // The files may already be in the requested state even if the caller thought
+            // otherwise (e.g. the folder was toggled outside the app); keep both in sync.
+            entry.IsEnabled = enabled;
             return new OperationResult(true, "Already in the requested state.");
         }
 
-        if (EntryExists(primaryTarget))
+        if (primaryNeedsMove && EntryExists(primaryTarget))
         {
             return new OperationResult(false, $"{Path.GetFileName(primaryTarget)} already exists — nothing was changed.");
         }
 
-        if (pairedTarget is not null && EntryExists(pairedTarget))
+        if (pairedNeedsMove && EntryExists(pairedTarget!))
         {
-            return new OperationResult(false, $"{Path.GetFileName(pairedTarget)} already exists — nothing was changed.");
+            return new OperationResult(false, $"{Path.GetFileName(pairedTarget!)} already exists — nothing was changed.");
         }
 
         try
         {
             // Rename the asset folder first; restore it if the primary rename fails.
-            if (pairedTarget is not null)
+            if (pairedNeedsMove)
             {
-                MoveEntry(entry.PairedFolderPath!, pairedTarget);
+                MoveEntry(pairedSource!, pairedTarget!);
             }
 
             try
             {
-                MoveEntry(entry.Path, primaryTarget);
+                if (primaryNeedsMove)
+                {
+                    MoveEntry(entry.Path, primaryTarget);
+                }
             }
             catch
             {
-                if (pairedTarget is not null && EntryExists(pairedTarget))
+                if (pairedNeedsMove && EntryExists(pairedTarget!))
                 {
-                    TryMoveBack(pairedTarget, entry.PairedFolderPath!);
+                    TryMoveBack(pairedTarget!, pairedSource!);
                 }
                 throw;
             }
 
-            entry.Path = primaryTarget;
-            if (pairedTarget is not null) entry.PairedFolderPath = pairedTarget;
+            if (primaryNeedsMove) entry.Path = primaryTarget;
+            if (pairedNeedsMove) entry.PairedFolderPath = pairedTarget;
             entry.IsEnabled = enabled;
 
             var action = enabled ? "Enabled" : "Disabled";
@@ -78,8 +89,9 @@ public sealed class ToggleService
         try
         {
             var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            var targetDir = Path.Combine(_config.Data.Trash, stamp, entry.Type.Folder);
-            if (!string.IsNullOrEmpty(entry.Category)) targetDir = Path.Combine(targetDir, entry.Category);
+            var targetDir = Path.Combine(_config.Data.Trash, stamp, SafeFolderName(entry.Type.Folder));
+            var category = SafeFolderName(entry.Category);
+            if (category.Length > 0) targetDir = Path.Combine(targetDir, category);
             Directory.CreateDirectory(targetDir);
 
             var paths = new List<string> { entry.Path };
@@ -166,6 +178,17 @@ public sealed class ToggleService
                 Directory.Delete(source, recursive: true);
             }
         }
+        else
+        {
+            throw new FileNotFoundException("Mod path not found", source);
+        }
+    }
+
+    /// <summary>Turns a category/type name into a single safe folder name ("MX1 250/450" → "MX1 250-450").</summary>
+    private static string SafeFolderName(string value)
+    {
+        var name = value.Replace('/', '-').Replace('\\', '-').Trim();
+        return name is "." or ".." ? string.Empty : name;
     }
 
     private static void CopyDirectory(string source, string target)

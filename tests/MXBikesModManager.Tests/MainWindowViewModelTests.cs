@@ -23,8 +23,6 @@ public class MainWindowViewModelTests
         public Task<IReadOnlyList<string>> PickModArchivesAsync() =>
             Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
 
-        public Task<string?> PickModsFolderAsync() => Task.FromResult<string?>(null);
-
         public Task<bool> ConfirmAsync(string title, string message, string confirmText = "Continue") =>
             Task.FromResult(true);
 
@@ -188,6 +186,61 @@ public class MainWindowViewModelTests
             env.ModsRoot, "rider", "boots", "Fox Instinct 2.0 by Aeffertz.pkz")));
         Assert.False(File.Exists(Path.Combine(
             env.ModsRoot, "rider", "Fox Instinct 2.0 by Aeffertz.pkz")));
+    }
+
+    [Fact]
+    public async Task Bulk_disable_and_enable_sync_the_tile_state_and_summary()
+    {
+        using var env = new TestEnvironment();
+        env.Touch("bikes/Bulk_A.pkz", "pkz");
+        env.Touch("bikes/Bulk_B.pkz", "pkz");
+
+        var vm = new MainWindowViewModel(env.Config, new FakeUi(), "bikes");
+        vm.Initialize();
+        await vm.RefreshAsync();
+
+        var typeVm = vm.Types.Single(t => t.Type.Key == "bikes");
+        Assert.Equal(2, typeVm.AllItems.Count);
+        foreach (var item in typeVm.AllItems) item.IsSelected = true;
+
+        await vm.DisableSelectedCommand.ExecuteAsync(null);
+
+        Assert.All(typeVm.AllItems, item =>
+        {
+            Assert.False(item.IsEnabled);
+            Assert.False(item.Entry.IsEnabled);
+        });
+        Assert.Contains("0 enabled", vm.Summary, StringComparison.Ordinal);
+
+        await vm.EnableSelectedCommand.ExecuteAsync(null);
+
+        Assert.All(typeVm.AllItems, item =>
+        {
+            Assert.True(item.IsEnabled);
+            Assert.True(item.Entry.IsEnabled);
+        });
+        Assert.Contains("2 enabled", vm.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Failed_removal_keeps_the_item_in_the_grid()
+    {
+        using var env = new TestEnvironment();
+        var path = env.Touch("bikes/Gone.pkz", "payload");
+
+        var vm = new MainWindowViewModel(env.Config, new FakeUi(), "bikes");
+        vm.Initialize();
+        await vm.RefreshAsync();
+
+        var typeVm = vm.Types.Single(t => t.Type.Key == "bikes");
+        var item = typeVm.AllItems.Single(i => i.Entry.BaseName == "Gone");
+        item.IsSelected = true;
+        File.Delete(path);
+
+        await vm.RemoveSelectedCommand.ExecuteAsync(null);
+
+        Assert.Contains(item, typeVm.AllItems);
+        Assert.Contains("failed", vm.Status, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

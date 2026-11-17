@@ -77,7 +77,7 @@ public class MetadataAndImageTests
     [Fact]
     public void Pkz_inspector_reads_track_ini_and_cover_image()
     {
-        using var temp = new TempDir();
+        using var temp = new TestDir();
         var zipPath = Path.Combine(temp.Path, "Nice Track.pkz");
         var tga = MakeTga(1, 1, (10, 20, 30));
         var ini = """
@@ -108,7 +108,7 @@ public class MetadataAndImageTests
     [Fact]
     public void Pkz_inspector_returns_nothing_for_obfuscated_archives()
     {
-        using var temp = new TempDir();
+        using var temp = new TestDir();
         var fake = Path.Combine(temp.Path, "bike.pkz");
         File.WriteAllText(fake, "PK\u0003\u0004 not really a zip");
 
@@ -139,7 +139,7 @@ public class MetadataAndImageTests
     [Fact]
     public void Metadata_cache_survives_a_reload()
     {
-        using var temp = new TempDir();
+        using var temp = new TestDir();
         var log = new LogService(temp.Path);
         var cache = new MetadataCache(Path.Combine(temp.Path, "cache"), log);
         var written = DateTime.UtcNow;
@@ -170,19 +170,4 @@ public class MetadataAndImageTests
         stream.Write(content);
     }
 
-    private sealed class TempDir : IDisposable
-    {
-        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mxbikes-tests", Guid.NewGuid().ToString("N"));
-
-        public TempDir() => Directory.CreateDirectory(Path);
-
-        public void Dispose()
-        {
-            try
-            {
-                if (Directory.Exists(Path)) Directory.Delete(Path, recursive: true);
-            }
-            catch (IOException) { }
-        }
-    }
 }

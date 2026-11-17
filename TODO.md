@@ -2,6 +2,25 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
+## 0.2.1 — review fixes
+
+- [x] Bulk enable/disable syncs tile checkboxes, filters and summary
+- [x] Failed removals stay in the grid; missing sources now report failure
+- [x] Cached previews follow the renamed `.pkz` after toggling
+- [x] `install-desktop.sh` finds the repo without the gitignored `appsettings.json`
+- [x] Trash paths no longer split category names containing `/`
+- [x] Paired `.pkz`/folder toggled outside the app is normalised
+- [x] Category chip counts refresh; `CountText` raises change notifications
+- [x] Zip-bomb-safe INI reads, TGA bounds guard, metadata-cache pruning,
+      capped thumbnail cache, faster layout detection
+- [x] Dead code removed (`ModEntry.Name/SizeKnown`, `LogService.Written`,
+      `PickModsFolderAsync`, unused `data.thumbs`, no-op branches)
+- [x] 115 tests pass, Release build + `dotnet format` clean
+- [x] Installer verified from a fresh checkout and from a release-bundle layout
+- [ ] Commit, tag `v0.2.1`, push and confirm the Release workflow assets
+- [ ] Git history still contains the old `/home/vilmos/...` appsettings path
+      (scrub only with an explicit decision: history rewrite + force-push)
+
 ## Final 0.2.0 release
 
 - [x] Bump version to 0.2.0

@@ -82,15 +82,13 @@ public sealed class ModScanner
 
                 var entry = new ModEntry
                 {
-                    Name = baseName,
                     BaseName = baseName,
                     Type = type,
                     Kind = ModKind.PkzArchive,
                     Category = category,
                     Path = file,
                     IsEnabled = !disabled,
-                    SizeBytes = SafeLength(file),
-                    SizeKnown = true
+                    SizeBytes = SafeLength(file)
                 };
 
                 entries.Add(entry);
@@ -119,14 +117,12 @@ public sealed class ModScanner
 
                 var entry = new ModEntry
                 {
-                    Name = baseName,
                     BaseName = baseName,
                     Type = type,
                     Kind = ModKind.Folder,
                     Category = category,
                     Path = dir,
-                    IsEnabled = !disabled,
-                    SizeKnown = false
+                    IsEnabled = !disabled
                 };
 
                 entries.Add(entry);
@@ -138,7 +134,7 @@ public sealed class ModScanner
         foreach (var entry in entries)
         {
             ct.ThrowIfCancellationRequested();
-            Enrich(entry, useCache: true);
+            Enrich(entry);
         }
 
         // 4. Sizes of paired folders, in parallel; this is pure I/O and can be slow on 8 GB of paints.
@@ -154,10 +150,7 @@ public sealed class ModScanner
                 entry =>
                 {
                     var folder = entry.PairedFolderPath ?? entry.Path;
-                    if (entry.Kind == ModKind.Folder && !entry.IsEnabled) { /* still fine */ }
-                    var size = PathUtil.DirectorySize(folder, ct);
-                    entry.SizeBytes += size;
-                    entry.SizeKnown = true;
+                    entry.SizeBytes += PathUtil.DirectorySize(folder, ct);
                 });
         }
 
@@ -200,20 +193,26 @@ public sealed class ModScanner
         return defaultCategory;
     }
 
-    private void Enrich(ModEntry entry, bool useCache)
+    private void Enrich(ModEntry entry)
     {
         // Cache identity ignores the disabled suffix, so toggling does not invalidate metadata.
         var identityPath = IdentityPath(entry);
         var size = SafeLength(entry.Path);
         var lastWrite = SafeLastWrite(entry.Path);
 
-        if (useCache && _cache.TryGet(identityPath, size, lastWrite, out var cachedInfo, out var cachedPreview))
+        if (_cache.TryGet(identityPath, size, lastWrite, out var cachedInfo, out var cachedPreview))
         {
-            var previewStillValid = cachedPreview is not { IsFile: true } || File.Exists(cachedPreview.FilePath);
+            // Toggling renames the archive/folder, so a cached archive preview still points at
+            // the old (now missing) path. Rebase it onto the current path before reusing it.
+            var resolvedPreview = cachedPreview is { IsArchive: true }
+                ? PreviewSource.FromArchive(entry.Path, cachedPreview.EntryName!)
+                : cachedPreview;
+
+            var previewStillValid = resolvedPreview is not { IsFile: true } || File.Exists(resolvedPreview.FilePath);
             if (previewStillValid)
             {
                 entry.Info = cachedInfo;
-                entry.Preview = cachedPreview;
+                entry.Preview = resolvedPreview;
                 return;
             }
         }
@@ -244,9 +243,11 @@ public sealed class ModScanner
         {
             foreach (var file in PathUtil.EnumerateFilesSafe(folder, "*.ini").Take(4))
             {
-                var text = File.ReadAllText(file);
-                if (text.Length > 64 * 1024) text = text[..(64 * 1024)];
-                var ini = IniFile.Parse(text);
+                // Read a bounded prefix so a huge/broken file cannot exhaust memory.
+                using var reader = new StreamReader(file);
+                var buffer = new char[64 * 1024];
+                var read = reader.ReadBlock(buffer, 0, buffer.Length);
+                var ini = IniFile.Parse(new string(buffer, 0, read));
                 var name = IniFile.Get(ini, "info", "name");
                 var author = IniFile.Get(ini, "ui", "author");
                 var location = IniFile.Get(ini, "ui", "location");

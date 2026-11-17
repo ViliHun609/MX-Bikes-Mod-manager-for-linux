@@ -14,7 +14,6 @@ public sealed record InstallChoice(
 public interface IUiInteraction
 {
     Task<IReadOnlyList<string>> PickModArchivesAsync();
-    Task<string?> PickModsFolderAsync();
     Task<InstallChoice?> PickInstallTypeAsync(InstallPlan plan, IReadOnlyList<string> paintBikes);
     Task<bool> ConfirmAsync(string title, string message, string confirmText = "Continue");
     Task ShowMessageAsync(string title, string message);

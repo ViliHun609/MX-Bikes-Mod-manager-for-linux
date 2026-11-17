@@ -11,7 +11,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <RootNamespace>MXBikesModManager</RootNamespace>
     <AssemblyName>MXBikesModManager</AssemblyName>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <ApplicationIcon>Assets/icon.ico</ApplicationIcon>
     <EnableDefaultAvaloniaItems>true</EnableDefaultAvaloniaItems>
   </PropertyGroup>
