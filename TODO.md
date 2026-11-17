@@ -17,7 +17,9 @@ Status of the current batch of work. Update the checkboxes as things change.
       `PickModsFolderAsync`, unused `data.thumbs`, no-op branches)
 - [x] 115 tests pass, Release build + `dotnet format` clean
 - [x] Installer verified from a fresh checkout and from a release-bundle layout
-- [ ] Commit, tag `v0.2.1`, push and confirm the Release workflow assets
+- [x] Commit, tag `v0.2.1`, push and confirm the Release workflow assets
+- [x] Release published: <https://github.com/ViliHun609/MX-Bikes-Mod-manager-for-linux/releases/tag/v0.2.1>
+      (AppImage + bundle + `SHA256SUMS` downloaded and verified)
 - [ ] Git history still contains the old `/home/vilmos/...` appsettings path
       (scrub only with an explicit decision: history rewrite + force-push)
 
