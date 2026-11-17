@@ -1,9 +1,31 @@
 # Desktop Installation Checklist
 
-Use this after building `dist/MXBikesModManager-x86_64.AppImage`. Everything is
-per-user and does **not** require root.
+Everything is per-user and does **not** require root. You can install a published
+release or build from source.
 
-## Install
+## Option A — install a release (recommended)
+
+- [ ] Open the repository's **Releases** page.
+- [ ] Download `MXBikesModManager-*-linux-x86_64.tar.gz`.
+- [ ] Extract it.
+- [ ] Run the installer from the extracted folder:
+
+  ```bash
+  ./install-desktop.sh
+  ```
+
+- [ ] Confirm the app was copied to `~/.local/opt/mxbikes-mod-manager/`.
+- [ ] Confirm the icon and launcher exist:
+  - `~/.local/share/icons/hicolor/512x512/apps/mxbikes-mod-manager.png`
+  - `~/.local/share/applications/mxbikes-mod-manager.desktop`
+- [ ] Launch **MX Bikes Mod Manager** from the app launcher.
+- [ ] Verify your mods are detected and the tabs show the expected counts.
+- [ ] Check `~/.local/opt/mxbikes-mod-manager/data/logs/app.log` for startup errors.
+
+You can also download `MXBikesModManager-x86_64.AppImage` and `install-desktop.sh`
+separately; place them in the same folder before running the installer.
+
+## Option B — build from source
 
 - [ ] Build the latest AppImage:
 
@@ -26,10 +48,18 @@ per-user and does **not** require root.
 - [ ] Verify your mods are detected and the tabs show the expected counts.
 - [ ] Check `~/.local/opt/mxbikes-mod-manager/data/logs/app.log` for startup errors.
 
-## Reinstall / update the AppImage
+## Reinstall / update
 
-- [ ] Build or download the new AppImage.
-- [ ] Run:
+Live updates are intentionally not configured. To update:
+
+- [ ] Download the newer release bundle (or AppImage).
+- [ ] Run the installer again:
+
+  ```bash
+  ./install-desktop.sh
+  ```
+
+  or, from a checkout:
 
   ```bash
   scripts/install-desktop.sh --appimage /path/to/MXBikesModManager-x86_64.AppImage
@@ -38,17 +68,14 @@ per-user and does **not** require root.
 - [ ] Confirm the AppImage was replaced but `appsettings.json` and `data/` were kept.
 - [ ] Relaunch the app.
 
-## GitHub auto-updates (once the repo exists)
+## Publishing a release
 
-- [ ] Create the GitHub repository and push `main`.
-- [ ] Add the repository URL to the release/update configuration.
-- [ ] Add a GitHub Actions workflow that runs tests and builds the AppImage on a tag.
-- [ ] Upload the AppImage and `.zsync` to a GitHub Release.
-- [ ] Rebuild the AppImage with `gh-releases-zsync` update information.
-- [ ] Test `appimageupdatetool` (or AppImageUpdate) against the installed AppImage.
-- [ ] Confirm an update preserves config and `data/`.
-
-Until this is done there is no automatic GitHub update; use the reinstall step above.
+- [ ] Bump `<Version>` in `src/MXBikesModManager/MXBikesModManager.csproj`.
+- [ ] Commit the version bump.
+- [ ] Push a matching tag, for example `v0.2.0`.
+- [ ] Confirm the `Release` workflow built the AppImage + bundle and attached them to the
+      GitHub release.
+- [ ] Download the release assets yourself and run the installer once as a smoke test.
 
 ## Uninstall
 

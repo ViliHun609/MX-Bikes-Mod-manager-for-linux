@@ -136,7 +136,7 @@ public sealed class ConfigService
         {
             var dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(path, JsonSerializer.Serialize(Config, JsonOptions));
+            File.WriteAllText(path, JsonSerializer.Serialize(Config, JsonOptions) + Environment.NewLine);
             return true;
         }
         catch (Exception ex)

@@ -52,5 +52,6 @@ public class ConfigServiceTests
         Assert.DoesNotContain("\"layout\"", json);
         Assert.DoesNotContain("tileWidth", json);
         Assert.DoesNotContain("rememberWindow", json);
+        Assert.EndsWith(Environment.NewLine, json);
     }
 }

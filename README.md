@@ -5,6 +5,26 @@ built with **Avalonia UI** and **.NET 10**. It reads the game's mods folder dire
 the Proton prefix, shows every mod as a card grid per type, and enables/disables mods
 instantly by renaming them in place.
 
+## Download & install
+
+1. Open the repository's **Releases** page on GitHub.
+2. Download `MXBikesModManager-*-linux-x86_64.tar.gz`.
+3. Extract it and run:
+
+   ```bash
+   ./install-desktop.sh
+   ```
+
+4. Launch **MX Bikes Mod Manager** from your app menu.
+
+You can also download `MXBikesModManager-x86_64.AppImage` and `install-desktop.sh`
+separately and place them in the same folder before running the installer. See
+[`INSTALL.md`](INSTALL.md) for the checklist, manual install, uninstall and
+troubleshooting.
+
+Automatic/live updates are not configured. To update, download a newer release and run
+the installer again; your config and data are preserved.
+
 ![Screenshot](docs/screenshot.png)
 
 ## Features
@@ -182,9 +202,10 @@ downloads it into `data/tools/`). AppRun forwards arguments, so `--scan` works t
 When running the AppImage, put `appsettings.json` next to the `.AppImage` file (or pass
 `--config`) and the app writes its `data/` folder next to it as well.
 
-## Install as a desktop app
+## Install from a source checkout
 
 ```bash
+scripts/build-appimage.sh
 scripts/install-desktop.sh
 ```
 
@@ -198,13 +219,16 @@ refreshes the desktop/icon caches. No root is required.
 
 See [`INSTALL.md`](INSTALL.md) for the full checklist, manual install and update notes.
 
-GitHub auto-updates are not wired yet: they need a GitHub repository, release workflow and
-`gh-releases-zsync` update information (the checklist covers the steps).
+Releases are published by the `Release` GitHub Actions workflow when a `v*` tag is pushed.
+It builds the AppImage, creates the download bundle and attaches both to the GitHub
+release. Live updates are intentionally not enabled yet.
 
 ## Project layout
 
 ```
 INSTALL.md                        desktop install / update checklist
+LICENSE                           MIT license
+THIRD-PARTY-NOTICES.md            dependency and icon licenses
 appsettings.json                  portable configuration
 src/MXBikesModManager/
   Models/       config + mod entry models
@@ -218,6 +242,8 @@ src/MXBikesModManager/
 tests/MXBikesModManager.Tests/    xUnit test suite
 scripts/build-appimage.sh         AppImage packaging
 scripts/install-desktop.sh        per-user desktop installer / uninstaller
+.github/workflows/ci.yml          tests + AppImage build on push/PR
+.github/workflows/release.yml     tag -> AppImage + download bundle release
 data/                             runtime data (gitignored)
 ```
 
@@ -240,3 +266,25 @@ data/                             runtime data (gitignored)
 - On Wayland sessions the app starts Avalonia's native Wayland backend, which supports
   file drag & drop from native file managers (the XWayland path on Hyprland cannot).
   Set `MXB_FORCE_X11=1` to force the XWayland backend if a compositor misbehaves.
+
+## Development
+
+GitHub Actions runs the test suite, verifies formatting, builds the AppImage and uploads
+it as a workflow artifact on every push and pull request.
+
+To publish a release, bump `<Version>` in `MXBikesModManager.csproj`, commit it, then
+push a matching tag:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The `Release` workflow validates the tag/version, builds the AppImage, creates the
+`MXBikesModManager-0.2.0-linux-x86_64.tar.gz` bundle and attaches the assets plus
+`SHA256SUMS` to the GitHub release.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). Third-party dependency and icon licenses are listed in
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).

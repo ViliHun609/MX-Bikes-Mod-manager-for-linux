@@ -2,7 +2,23 @@
 
 Status of the current batch of work. Update the checkboxes as things change.
 
-## Current: desktop install + checklist
+## Final 0.2.0 release
+
+- [x] Bump version to 0.2.0
+- [x] MIT `LICENSE` + `THIRD-PARTY-NOTICES.md`
+- [x] GitHub Actions CI workflow (tests, format check, AppImage artifact)
+- [x] GitHub Actions release workflow (tag → AppImage + bundle + checksums)
+- [x] Standalone installer works from the extracted release bundle
+- [x] Local release bundle tested end-to-end
+- [x] Keep saved `appsettings.json` stable (trailing newline; serialized shape committed)
+- [x] Rebuilt the 0.2.0 AppImage
+- [x] AppImage SHA-256:
+      `20603a484d4d57a5d1a5ece260812d8c6211cf3a7791ed61a12339d91fff0e4f`
+- [x] User final review, then commit
+- [ ] Create GitHub repo, push `main`, push tag `v0.2.0`
+- [ ] Confirm the Release workflow assets download and install
+
+## Desktop install + checklist
 
 - [x] `scripts/install-desktop.sh` (per-user install, reinstall preserves profile)
 - [x] Copies AppImage, `appsettings.json` and `data/` (excluding `data/tools`)
@@ -14,7 +30,6 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Rebuild AppImage (desktop entry categories changed)
 - [x] AppImage SHA-256:
       `89c390150a33d0bd162c75d1d4a4cc259bfb90fa8a591002f8523a34c28e0915`
-- [ ] GitHub repo + Actions release workflow + zsync update info (blocked on repo URL)
 
 ## Bikes/tracks icon polish (done)
 
@@ -25,7 +40,7 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Tab icons at 17 px
 - [x] Accurate credits (Bootstrap/Phosphor MIT, Font Awesome CC BY, custom bike silhouette)
 - [x] Build + 108 tests pass
-- [ ] User visual check in the tab bar
+- [x] User visual check in the tab bar
 - [x] Commits (`599f986`, tyre `de3a920`)
 - [x] AppImage SHA-256:
       `bba13296519116f6c8148e6d66c7e0b17eda9d8e4ae60458a181942bf8a3b64a`
@@ -61,8 +76,8 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Rider gear packs (`rider/riders/.../paints/*.pnt`) are no longer sent to the bike-paint picker
 - [x] Rider paint packs without a `rider/` type folder no longer duplicate `riders/`
 - [x] README + config docs
-- [ ] User re-tests “2024 GEAR FASTHOUSE.rar” (should land in `rider/riders/default_mx/paints`)
-- [ ] User checks a folder drop and the Trash toggle
+- [x] User re-tested “2024 GEAR FASTHOUSE.rar” (lands in `rider/riders/default_mx/paints`)
+- [x] Trash toggle verified live; folder drops covered by tests
 - [x] Commit this batch (`0fd5835`, rider paint fix `bb14332`)
 - [x] Rebuild the AppImage and record the new SHA-256:
       `e7700651b6e3b3c210957cd8e9c88e03f8bf0a8a5e25446ddb2d1bbc0a1e265e`
@@ -78,7 +93,7 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] `ui.smoothScrolling` setting + Settings checkbox (default on, applies live)
 - [x] Unit tests for the scroll maths and config default
 - [x] README + config docs
-- [ ] User checks the feel (tune ease/time if needed)
+- [x] User checked the feel (UI confirmed)
 - [x] Commit (`cd7f1a3`)
 - [x] AppImage SHA-256: `7b0bc69642205ce64b5c452df2bf8259571c5d6898828fe5e058b0ff83824aab`
 - [x] Decided against extra blur effects for now
@@ -90,7 +105,7 @@ Status of the current batch of work. Update the checkboxes as things change.
 - [x] Native `Avalonia.Wayland` backend for Wayland sessions; `MXB_FORCE_X11=1` escape hatch
 - [x] Drag diagnostics in `data/logs/app.log`
 - [x] File/folder picker error handling
-- [ ] User performs one real drag from Nautilus (still outstanding)
+- [x] Real drag from Nautilus verified (Fasthouse install log)
 - [x] Commit (`ed228b3`)
 - [x] AppImage SHA-256: `378d9fa6bfce6f281237ce48e58cbf7f5419064ea0400ad1af1530f0e194ab39`
 

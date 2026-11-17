@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: "1"
+  APPIMAGE_EXTRACT_AND_RUN: "1"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
+      - name: Verify formatting
+        run: dotnet format MXBikesModManager.slnx --no-restore --verify-no-changes
+
+      - name: Build AppImage
+        run: ./scripts/build-appimage.sh
+
+      - name: Stage release bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="$(grep -oP '(?<=<Version>)[^<]+' src/MXBikesModManager/MXBikesModManager.csproj | head -1)"
+          TAG="${GITHUB_REF_NAME#v}"
+          if [[ "$TAG" != "$VERSION" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match project version $VERSION" >&2
+            exit 1
+          fi
+
+          mkdir -p release
+          cp dist/MXBikesModManager-x86_64.AppImage release/
+          cp scripts/install-desktop.sh release/
+          cp src/MXBikesModManager/Assets/icon.png release/icon.png
+          cp INSTALL.md LICENSE THIRD-PARTY-NOTICES.md release/
+          chmod +x release/install-desktop.sh
+          tar -czf "dist/MXBikesModManager-${VERSION}-linux-x86_64.tar.gz" -C release .
+
+          cd dist
+          sha256sum \
+            MXBikesModManager-x86_64.AppImage \
+            "MXBikesModManager-${VERSION}-linux-x86_64.tar.gz" > SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: MX Bikes Mod Manager ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **Option A — bundle (recommended):**
+
+            1. Download `MXBikesModManager-*-linux-x86_64.tar.gz`.
+            2. Extract it.
+            3. Run `./install-desktop.sh`.
+            4. Launch **MX Bikes Mod Manager** from your app menu.
+
+            **Option B — AppImage + installer:**
+
+            1. Download `MXBikesModManager-x86_64.AppImage` and `install-desktop.sh` into the same folder.
+            2. Run `./install-desktop.sh`.
+
+            No automatic updates are configured; install a newer release by downloading it and
+            running the installer again. Your config and data are preserved.
+
+            See `INSTALL.md` for manual installation, uninstall and troubleshooting.
+          files: |
+            dist/MXBikesModManager-x86_64.AppImage
+            dist/MXBikesModManager-*-linux-x86_64.tar.gz
+            dist/SHA256SUMS
+            scripts/install-desktop.sh
+            src/MXBikesModManager/Assets/icon.png
+            INSTALL.md
+            LICENSE
+            THIRD-PARTY-NOTICES.md
+          fail_on_unmatched_files: true

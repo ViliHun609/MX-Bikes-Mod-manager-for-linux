@@ -3,7 +3,13 @@
 # No root is required; everything lands in ~/.local.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$SCRIPT_DIR"
+# Repo layout: scripts/install-desktop.sh -> repo root. Release bundle: script at root.
+if [[ ! -f "$ROOT/appsettings.json" && -f "$SCRIPT_DIR/../appsettings.json" ]]; then
+  ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
 APP_NAME="MXBikesModManager"
 APPIMAGE_NAME="$APP_NAME-x86_64.AppImage"
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -16,6 +22,14 @@ DESKTOP_FILE="$APPLICATIONS_DIR/$ICON_NAME.desktop"
 UNINSTALL=0
 PURGE=0
 SOURCE_APPIMAGE=""
+CLEANUP_DIR=""
+
+cleanup() {
+  if [[ -n "$CLEANUP_DIR" ]]; then
+    rm -rf "$CLEANUP_DIR"
+  fi
+}
+trap cleanup EXIT
 
 usage() {
   cat <<EOF
@@ -25,14 +39,15 @@ Usage:
   scripts/install-desktop.sh [options]
 
 Options:
-  --appimage <path>    AppImage to install (default: dist/$APPIMAGE_NAME)
+  --appimage <path>    AppImage to install (default: next to this script, then dist/)
   --install-dir <dir>  Target folder (default: $INSTALL_DIR)
   --uninstall          Remove the launcher/icon/AppImage, keep config and data
   --purge              Like --uninstall, but delete config and data too
   -h, --help           Show this help
 
-The installer copies appsettings.json and data/ into the target folder on a
-fresh install. Re-running it only replaces the AppImage, preserving config/data.
+The installer can be run from the repo or from a downloaded release bundle.
+It copies appsettings.json and data/ when they are available on a fresh install.
+Re-running it only replaces the AppImage, preserving config/data.
 EOF
 }
 
@@ -112,12 +127,18 @@ if (( UNINSTALL )); then
 fi
 
 if [[ -z "$SOURCE_APPIMAGE" ]]; then
-  SOURCE_APPIMAGE="$ROOT/dist/$APPIMAGE_NAME"
+  for candidate in "$SCRIPT_DIR/$APPIMAGE_NAME" "$PWD/$APPIMAGE_NAME" "$ROOT/dist/$APPIMAGE_NAME"; do
+    if [[ -f "$candidate" ]]; then
+      SOURCE_APPIMAGE="$candidate"
+      break
+    fi
+  done
 fi
 
-if [[ ! -f "$SOURCE_APPIMAGE" ]]; then
-  echo "error: AppImage not found: $SOURCE_APPIMAGE" >&2
-  echo "Build it first with scripts/build-appimage.sh, or pass --appimage <path>." >&2
+if [[ -z "$SOURCE_APPIMAGE" || ! -f "$SOURCE_APPIMAGE" ]]; then
+  echo "error: AppImage not found." >&2
+  echo "Put $APPIMAGE_NAME next to this script, or pass --appimage <path>." >&2
+  echo "From the repo you can build it first with scripts/build-appimage.sh." >&2
   exit 1
 fi
 
@@ -129,9 +150,17 @@ mkdir -p "$INSTALL_DIR" "$APPLICATIONS_DIR" "$ICON_DIR"
 
 install -m 0755 "$SOURCE_APPIMAGE" "$INSTALL_DIR/$APPIMAGE_NAME"
 
+CONFIG_SOURCE=""
+for candidate in "$SCRIPT_DIR/appsettings.json" "$ROOT/appsettings.json"; do
+  if [[ -f "$candidate" ]]; then
+    CONFIG_SOURCE="$candidate"
+    break
+  fi
+done
+
 # Preserve an existing profile on reinstall/update.
-if [[ ! -f "$INSTALL_DIR/appsettings.json" && -f "$ROOT/appsettings.json" ]]; then
-  install -m 0644 "$ROOT/appsettings.json" "$INSTALL_DIR/appsettings.json"
+if [[ ! -f "$INSTALL_DIR/appsettings.json" && -n "$CONFIG_SOURCE" ]]; then
+  install -m 0644 "$CONFIG_SOURCE" "$INSTALL_DIR/appsettings.json"
 fi
 
 if [[ ! -e "$INSTALL_DIR/data" ]]; then
@@ -143,9 +172,26 @@ if [[ ! -e "$INSTALL_DIR/data" ]]; then
   fi
 fi
 
-ICON_SOURCE="$ROOT/src/MXBikesModManager/Assets/icon.png"
-if [[ -f "$ICON_SOURCE" ]]; then
+ICON_SOURCE=""
+for candidate in "$SCRIPT_DIR/icon.png" "$ROOT/src/MXBikesModManager/Assets/icon.png"; do
+  if [[ -f "$candidate" ]]; then
+    ICON_SOURCE="$candidate"
+    break
+  fi
+done
+
+# Release bundles include icon.png; if it is missing, pull the icon out of the AppImage.
+if [[ -z "$ICON_SOURCE" ]]; then
+  CLEANUP_DIR="$(mktemp -d)"
+  if (cd "$CLEANUP_DIR" && "$SOURCE_APPIMAGE" --appimage-extract 'usr/share/icons/hicolor/512x512/apps/*.png' >/dev/null 2>&1); then
+    ICON_SOURCE="$(find "$CLEANUP_DIR/squashfs-root" -type f -name '*.png' | head -1)"
+  fi
+fi
+
+if [[ -n "$ICON_SOURCE" && -f "$ICON_SOURCE" ]]; then
   install -m 0644 "$ICON_SOURCE" "$ICON_DIR/$ICON_NAME.png"
+else
+  echo "warning: icon not found; the launcher will use a generic icon." >&2
 fi
 
 cat > "$DESKTOP_FILE" <<EOF
@@ -171,7 +217,11 @@ refresh_caches
 
 echo "Installed MX Bikes Mod Manager"
 echo "  AppImage: $INSTALL_DIR/$APPIMAGE_NAME"
-echo "  Config:   $INSTALL_DIR/appsettings.json"
+if [[ -f "$INSTALL_DIR/appsettings.json" ]]; then
+  echo "  Config:   $INSTALL_DIR/appsettings.json"
+else
+  echo "  Config:   created on first launch"
+fi
 echo "  Data:     $INSTALL_DIR/data"
 echo "  Launcher: $DESKTOP_FILE"
 echo
